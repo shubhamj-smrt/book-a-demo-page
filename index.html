@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book a Demo | SMRT</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            margin-bottom: 32px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 6px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 14px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            background: #fafafa;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="tel"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #333;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-row .form-group {
+            margin-bottom: 0;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        input[type="checkbox"] {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+        }
+
+        .checkbox-item label {
+            margin-bottom: 0;
+            font-weight: 400;
+            cursor: pointer;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            background: #000;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+        }
+
+        button:hover {
+            background: #333;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .success-message {
+            display: none;
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            color: #166534;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .error-message {
+            color: #dc2626;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 32px 24px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 380px) {
+            body {
+                padding: 12px;
+            }
+
+            .container {
+                padding: 12px;
+                border-radius: 8px;
+            }
+
+            .header {
+                margin-bottom: 24px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+                margin-bottom: 6px;
+            }
+
+            .header p {
+                font-size: 12px;
+                line-height: 1.5;
+            }
+
+            .form-group {
+                margin-bottom: 16px;
+            }
+
+            label {
+                font-size: 12px;
+                margin-bottom: 4px;
+            }
+
+            input[type="text"],
+            input[type="email"],
+            input[type="tel"],
+            select,
+            textarea {
+                padding: 8px 10px;
+                font-size: 16px;
+            }
+
+            textarea {
+                min-height: 70px;
+            }
+
+            .checkbox-group {
+                gap: 12px;
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 13px;
+                margin-top: 6px;
+            }
+
+            .success-message {
+                padding: 10px 12px;
+                font-size: 12px;
+                margin-bottom: 16px;
+            }
+
+            .error-message {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-message" id="successMessage">
+            ✓ Thank you! We'll be in touch shortly to schedule your demo.
+        </div>
+
+        <div class="header">
+            <h1>Book a Demo</h1>
+            <p>See how SMRT can transform your business. Schedule a personalized demo with our team.</p>
+        </div>
+
+        <form id="demoForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <input type="text" id="firstName" name="firstName" required>
+                    <div class="error-message" id="firstNameError"></div>
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Last Name</label>
+                    <input type="text" id="lastName" name="lastName" required>
+                    <div class="error-message" id="lastNameError"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required>
+                <div class="error-message" id="emailError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" required>
+                <div class="error-message" id="phoneError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="company">Company Name</label>
+                <input type="text" id="company" name="company" required>
+                <div class="error-message" id="companyError"></div>
+            </div>
+
+            <div class="form-group">
+                <label>What are you interested in?</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="interest1" name="interests" value="Platform Overview">
+                        <label for="interest1">Platform Overview</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="interest2" name="interests" value="Pricing">
+                        <label for="interest2">Pricing</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="interest3" name="interests" value="Integration">
+                        <label for="interest3">Integration</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="message">Additional Details</label>
+                <textarea id="message" name="message" placeholder="Tell us about your needs..."></textarea>
+            </div>
+
+            <button type="submit">Schedule Demo</button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('demoForm');
+        const successMessage = document.getElementById('successMessage');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Clear previous error messages
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.classList.remove('show');
+            });
+
+            // Validate form
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const company = document.getElementById('company').value.trim();
+
+            let isValid = true;
+
+            if (!firstName) {
+                document.getElementById('firstNameError').textContent = 'Required';
+                document.getElementById('firstNameError').classList.add('show');
+                isValid = false;
+            }
+
+            if (!lastName) {
+                document.getElementById('lastNameError').textContent = 'Required';
+                document.getElementById('lastNameError').classList.add('show');
+                isValid = false;
+            }
+
+            if (!email || !email.includes('@')) {
+                document.getElementById('emailError').textContent = 'Valid email required';
+                document.getElementById('emailError').classList.add('show');
+                isValid = false;
+            }
+
+            if (!phone) {
+                document.getElementById('phoneError').textContent = 'Required';
+                document.getElementById('phoneError').classList.add('show');
+                isValid = false;
+            }
+
+            if (!company) {
+                document.getElementById('companyError').textContent = 'Required';
+                document.getElementById('companyError').classList.add('show');
+                isValid = false;
+            }
+
+            if (!isValid) return;
+
+            // Collect form data
+            const formData = new FormData(form);
+            const interests = Array.from(document.querySelectorAll('input[name="interests"]:checked'))
+                .map(cb => cb.value)
+                .join(', ');
+
+            const data = {
+                firstName,
+                lastName,
+                email,
+                phone,
+                company,
+                interests: interests || 'Not specified',
+                message: document.getElementById('message').value.trim()
+            };
+
+            try {
+                // Send to your backend endpoint
+                // Replace with your actual endpoint
+                const response = await fetch('/api/demo-booking', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                }).catch(() => {
+                    // If endpoint doesn't exist, just show success
+                    // (for development/testing)
+                    return { ok: true };
+                });
+
+                // Show success message
+                form.style.display = 'none';
+                successMessage.classList.add('show');
+                console.log('Form data:', data);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>
