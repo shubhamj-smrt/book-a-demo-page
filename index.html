@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book a Demo | SMRT</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .form-helper {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .required-mark {
+            color: #dc2626;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 6px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 14px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            background: #fafafa;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="tel"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #333;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+        }
+
+        input.error,
+        select.error,
+        textarea.error {
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+
+        input.error:focus,
+        select.error:focus,
+        textarea.error:focus {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .form-row .form-group {
+            margin-bottom: 0;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            background: #000;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+        }
+
+        button:hover:not(:disabled) {
+            background: #333;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .success-message {
+            display: none;
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            color: #166534;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .error-message {
+            color: #dc2626;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 32px 24px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 380px) {
+            body {
+                padding: 12px;
+            }
+
+            .container {
+                padding: 12px;
+                border-radius: 8px;
+            }
+
+            .header {
+                margin-bottom: 12px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+                margin-bottom: 6px;
+            }
+
+            .header p {
+                font-size: 12px;
+                line-height: 1.5;
+            }
+
+            .form-helper {
+                font-size: 12px;
+                margin-bottom: 16px;
+            }
+
+            .form-group {
+                margin-bottom: 16px;
+            }
+
+            .form-row {
+                margin-bottom: 16px;
+            }
+
+            label {
+                font-size: 12px;
+                margin-bottom: 4px;
+            }
+
+            input[type="text"],
+            input[type="email"],
+            input[type="tel"],
+            select,
+            textarea {
+                padding: 8px 10px;
+                font-size: 16px;
+            }
+
+            textarea {
+                min-height: 70px;
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 13px;
+                margin-top: 6px;
+            }
+
+            .success-message {
+                padding: 10px 12px;
+                font-size: 12px;
+                margin-bottom: 16px;
+            }
+
+            .error-message {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-message" id="successMessage">
+            ✓ Thank you! We'll be in touch shortly to schedule your demo.
+        </div>
+
+        <div class="header">
+            <h1>Book a Demo</h1>
+            <p>See how SMRT can transform your business. Schedule a personalized demo with our team.</p>
+        </div>
+
+        <p class="form-helper"><span class="required-mark">*</span> Required fields</p>
+
+        <form id="demoForm" novalidate>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="firstName">First Name<span class="required-mark"> *</span></label>
+                    <input type="text" id="firstName" name="firstName" required>
+                    <div class="error-message" id="firstNameError"></div>
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Last Name<span class="required-mark"> *</span></label>
+                    <input type="text" id="lastName" name="lastName" required>
+                    <div class="error-message" id="lastNameError"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address<span class="required-mark"> *</span></label>
+                <input type="email" id="email" name="email" required>
+                <div class="error-message" id="emailError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Best number to reach you<span class="required-mark"> *</span></label>
+                <input type="tel" id="phone" name="phone" required>
+                <div class="error-message" id="phoneError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="company">Company Name<span class="required-mark"> *</span></label>
+                <input type="text" id="company" name="company" required>
+                <div class="error-message" id="companyError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="businessLocation">Where is your business located?<span class="required-mark"> *</span></label>
+                <select id="businessLocation" name="businessLocation" required>
+                    <option value="" selected disabled>Select a region</option>
+                    <option value="North America">North America</option>
+                    <option value="Australia">Australia</option>
+                    <option value="Europe/Middle East">Europe/Middle East</option>
+                    <option value="India">India</option>
+                    <option value="Other">Other</option>
+                </select>
+                <div class="error-message" id="businessLocationError"></div>
+            </div>
+
+            <div class="form-group" id="otherCountryGroup" hidden>
+                <label for="otherCountry">Country<span class="required-mark"> *</span></label>
+                <input type="text" id="otherCountry" name="otherCountry" placeholder="Enter your country">
+                <div class="error-message" id="otherCountryError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="interests">What are you interested in?<span class="required-mark"> *</span></label>
+                <select id="interests" name="interests" required>
+                    <option value="" selected disabled>Select an option</option>
+                    <option value="Platform Overview">Platform Overview</option>
+                    <option value="Pricing">Pricing</option>
+                    <option value="Integration">Integration</option>
+                </select>
+                <div class="error-message" id="interestsError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="message">Additional Details</label>
+                <textarea id="message" name="message" placeholder="Tell us about your needs..."></textarea>
+            </div>
+
+            <button type="submit" id="submitBtn" disabled>Schedule Demo</button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('demoForm');
+        const successMessage = document.getElementById('successMessage');
+        const submitBtn = document.getElementById('submitBtn');
+        const businessLocation = document.getElementById('businessLocation');
+        const otherCountryGroup = document.getElementById('otherCountryGroup');
+        const otherCountry = document.getElementById('otherCountry');
+
+        const fields = {
+            firstName: {
+                input: document.getElementById('firstName'),
+                error: document.getElementById('firstNameError'),
+                validate(value) {
+                    if (!value.trim()) return 'This field is required';
+                    return '';
+                }
+            },
+            lastName: {
+                input: document.getElementById('lastName'),
+                error: document.getElementById('lastNameError'),
+                validate(value) {
+                    if (!value.trim()) return 'This field is required';
+                    return '';
+                }
+            },
+            email: {
+                input: document.getElementById('email'),
+                error: document.getElementById('emailError'),
+                validate(value) {
+                    const trimmed = value.trim();
+                    if (!trimmed) return 'This field is required';
+                    const parts = trimmed.split('@');
+                    if (parts.length !== 2 || !parts[0] || !parts[1] || !parts[1].includes('.')) {
+                        return 'Enter a valid email address';
+                    }
+                    return '';
+                }
+            },
+            phone: {
+                input: document.getElementById('phone'),
+                error: document.getElementById('phoneError'),
+                validate(value) {
+                    const trimmed = value.trim();
+                    if (!trimmed) return 'This field is required';
+                    const digits = trimmed.replace(/\D/g, '');
+                    if (digits.length < 7) return 'Enter a valid phone number';
+                    return '';
+                }
+            },
+            company: {
+                input: document.getElementById('company'),
+                error: document.getElementById('companyError'),
+                validate(value) {
+                    if (!value.trim()) return 'This field is required';
+                    return '';
+                }
+            },
+            businessLocation: {
+                input: businessLocation,
+                error: document.getElementById('businessLocationError'),
+                validate(value) {
+                    if (!value) return 'Please select a region';
+                    return '';
+                }
+            },
+            otherCountry: {
+                input: otherCountry,
+                error: document.getElementById('otherCountryError'),
+                validate(value) {
+                    if (businessLocation.value !== 'Other') return '';
+                    if (!value.trim()) return 'Please enter your country';
+                    return '';
+                }
+            },
+            interests: {
+                input: document.getElementById('interests'),
+                error: document.getElementById('interestsError'),
+                validate(value) {
+                    if (!value) return 'Please select an option';
+                    return '';
+                }
+            }
+        };
+
+        function setFieldError(fieldKey, message) {
+            const field = fields[fieldKey];
+            if (!field) return;
+
+            field.error.textContent = message;
+            field.error.classList.toggle('show', Boolean(message));
+            field.input.classList.toggle('error', Boolean(message));
+        }
+
+        function validateField(fieldKey, showError = true) {
+            const field = fields[fieldKey];
+            if (!field) return true;
+
+            const message = field.validate(field.input.value);
+            if (showError) {
+                setFieldError(fieldKey, message);
+            }
+            return !message;
+        }
+
+        function validateAllFields(showErrors = true) {
+            let isValid = true;
+
+            Object.keys(fields).forEach((fieldKey) => {
+                if (!validateField(fieldKey, showErrors)) {
+                    isValid = false;
+                }
+            });
+
+            return isValid;
+        }
+
+        function updateSubmitState() {
+            let isValid = true;
+
+            Object.keys(fields).forEach((fieldKey) => {
+                const field = fields[fieldKey];
+                const message = field.validate(field.input.value);
+                if (message) {
+                    isValid = false;
+                }
+            });
+
+            submitBtn.disabled = !isValid;
+        }
+
+        function toggleOtherCountryField() {
+            const isOther = businessLocation.value === 'Other';
+            otherCountryGroup.hidden = !isOther;
+
+            if (!isOther) {
+                otherCountry.value = '';
+                setFieldError('otherCountry', '');
+            }
+
+            updateSubmitState();
+        }
+
+        Object.keys(fields).forEach((fieldKey) => {
+            const field = fields[fieldKey];
+            const eventType = field.input.tagName === 'SELECT' ? 'change' : 'input';
+
+            field.input.addEventListener(eventType, () => {
+                validateField(fieldKey, true);
+                updateSubmitState();
+            });
+
+            field.input.addEventListener('blur', () => {
+                validateField(fieldKey, true);
+                updateSubmitState();
+            });
+        });
+
+        businessLocation.addEventListener('change', () => {
+            validateField('businessLocation', true);
+            toggleOtherCountryField();
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!validateAllFields(true)) {
+                updateSubmitState();
+                return;
+            }
+
+            const businessLocationValue = businessLocation.value;
+            const data = {
+                firstName: fields.firstName.input.value.trim(),
+                lastName: fields.lastName.input.value.trim(),
+                email: fields.email.input.value.trim(),
+                phone: fields.phone.input.value.trim(),
+                company: fields.company.input.value.trim(),
+                businessLocation: businessLocationValue,
+                otherCountry: businessLocationValue === 'Other' ? otherCountry.value.trim() : null,
+                interests: fields.interests.input.value,
+                message: document.getElementById('message').value.trim()
+            };
+
+            try {
+                await fetch('/api/demo-booking', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                }).catch(() => ({ ok: true }));
+
+                form.style.display = 'none';
+                document.querySelector('.form-helper').style.display = 'none';
+                successMessage.classList.add('show');
+                console.log('Form data:', data);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+
+        updateSubmitState();
+    </script>
+</body>
+</html>
