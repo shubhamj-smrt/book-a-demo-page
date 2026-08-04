@@ -31,7 +31,7 @@
         }
 
         .header {
-            margin-bottom: 32px;
+            margin-bottom: 16px;
             text-align: center;
         }
 
@@ -46,6 +46,17 @@
             font-size: 14px;
             color: #666;
             line-height: 1.6;
+        }
+
+        .form-helper {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .required-mark {
+            color: #dc2626;
         }
 
         .form-group {
@@ -86,6 +97,20 @@
             box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
         }
 
+        input.error,
+        select.error,
+        textarea.error {
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+
+        input.error:focus,
+        select.error:focus,
+        textarea.error:focus {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+
         textarea {
             resize: vertical;
             min-height: 80px;
@@ -95,35 +120,11 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
+            margin-bottom: 20px;
         }
 
         .form-row .form-group {
             margin-bottom: 0;
-        }
-
-        .checkbox-group {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-            margin-top: 8px;
-        }
-
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        input[type="checkbox"] {
-            cursor: pointer;
-            width: 16px;
-            height: 16px;
-        }
-
-        .checkbox-item label {
-            margin-bottom: 0;
-            font-weight: 400;
-            cursor: pointer;
         }
 
         button {
@@ -140,14 +141,21 @@
             margin-top: 8px;
         }
 
-        button:hover {
+        button:hover:not(:disabled) {
             background: #333;
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
-        button:active {
+        button:active:not(:disabled) {
             transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         .success-message {
@@ -202,7 +210,7 @@
             }
 
             .header {
-                margin-bottom: 24px;
+                margin-bottom: 12px;
             }
 
             .header h1 {
@@ -215,7 +223,16 @@
                 line-height: 1.5;
             }
 
+            .form-helper {
+                font-size: 12px;
+                margin-bottom: 16px;
+            }
+
             .form-group {
+                margin-bottom: 16px;
+            }
+
+            .form-row {
                 margin-bottom: 16px;
             }
 
@@ -235,10 +252,6 @@
 
             textarea {
                 min-height: 70px;
-            }
-
-            .checkbox-group {
-                gap: 12px;
             }
 
             button {
@@ -270,54 +283,68 @@
             <p>See how SMRT can transform your business. Schedule a personalized demo with our team.</p>
         </div>
 
-        <form id="demoForm">
+        <p class="form-helper"><span class="required-mark">*</span> Required fields</p>
+
+        <form id="demoForm" novalidate>
             <div class="form-row">
                 <div class="form-group">
-                    <label for="firstName">First Name</label>
+                    <label for="firstName">First Name<span class="required-mark"> *</span></label>
                     <input type="text" id="firstName" name="firstName" required>
                     <div class="error-message" id="firstNameError"></div>
                 </div>
                 <div class="form-group">
-                    <label for="lastName">Last Name</label>
+                    <label for="lastName">Last Name<span class="required-mark"> *</span></label>
                     <input type="text" id="lastName" name="lastName" required>
                     <div class="error-message" id="lastNameError"></div>
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="email">Email Address</label>
+                <label for="email">Email Address<span class="required-mark"> *</span></label>
                 <input type="email" id="email" name="email" required>
                 <div class="error-message" id="emailError"></div>
             </div>
 
             <div class="form-group">
-                <label for="phone">Phone Number</label>
+                <label for="phone">Phone Number<span class="required-mark"> *</span></label>
                 <input type="tel" id="phone" name="phone" required>
                 <div class="error-message" id="phoneError"></div>
             </div>
 
             <div class="form-group">
-                <label for="company">Company Name</label>
+                <label for="company">Company Name<span class="required-mark"> *</span></label>
                 <input type="text" id="company" name="company" required>
                 <div class="error-message" id="companyError"></div>
             </div>
 
             <div class="form-group">
-                <label>What are you interested in?</label>
-                <div class="checkbox-group">
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="interest1" name="interests" value="Platform Overview">
-                        <label for="interest1">Platform Overview</label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="interest2" name="interests" value="Pricing">
-                        <label for="interest2">Pricing</label>
-                    </div>
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="interest3" name="interests" value="Integration">
-                        <label for="interest3">Integration</label>
-                    </div>
-                </div>
+                <label for="businessLocation">Where is your business located?<span class="required-mark"> *</span></label>
+                <select id="businessLocation" name="businessLocation" required>
+                    <option value="" selected disabled>Select a region</option>
+                    <option value="North America">North America</option>
+                    <option value="Australia">Australia</option>
+                    <option value="Europe/Middle East">Europe/Middle East</option>
+                    <option value="India">India</option>
+                    <option value="Other">Other</option>
+                </select>
+                <div class="error-message" id="businessLocationError"></div>
+            </div>
+
+            <div class="form-group" id="otherCountryGroup" hidden>
+                <label for="otherCountry">Country<span class="required-mark"> *</span></label>
+                <input type="text" id="otherCountry" name="otherCountry" placeholder="Enter your country">
+                <div class="error-message" id="otherCountryError"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="interests">What are you interested in?<span class="required-mark"> *</span></label>
+                <select id="interests" name="interests" required>
+                    <option value="" selected disabled>Select an option</option>
+                    <option value="Platform Overview">Platform Overview</option>
+                    <option value="Pricing">Pricing</option>
+                    <option value="Integration">Integration</option>
+                </select>
+                <div class="error-message" id="interestsError"></div>
             </div>
 
             <div class="form-group">
@@ -325,96 +352,204 @@
                 <textarea id="message" name="message" placeholder="Tell us about your needs..."></textarea>
             </div>
 
-            <button type="submit">Schedule Demo</button>
+            <button type="submit" id="submitBtn" disabled>Schedule Demo</button>
         </form>
     </div>
 
     <script>
         const form = document.getElementById('demoForm');
         const successMessage = document.getElementById('successMessage');
+        const submitBtn = document.getElementById('submitBtn');
+        const businessLocation = document.getElementById('businessLocation');
+        const otherCountryGroup = document.getElementById('otherCountryGroup');
+        const otherCountry = document.getElementById('otherCountry');
+
+        const fields = {
+            firstName: {
+                input: document.getElementById('firstName'),
+                error: document.getElementById('firstNameError'),
+                validate(value) {
+                    if (!value.trim()) return 'This field is required';
+                    return '';
+                }
+            },
+            lastName: {
+                input: document.getElementById('lastName'),
+                error: document.getElementById('lastNameError'),
+                validate(value) {
+                    if (!value.trim()) return 'This field is required';
+                    return '';
+                }
+            },
+            email: {
+                input: document.getElementById('email'),
+                error: document.getElementById('emailError'),
+                validate(value) {
+                    const trimmed = value.trim();
+                    if (!trimmed) return 'This field is required';
+                    const parts = trimmed.split('@');
+                    if (parts.length !== 2 || !parts[0] || !parts[1] || !parts[1].includes('.')) {
+                        return 'Enter a valid email address';
+                    }
+                    return '';
+                }
+            },
+            phone: {
+                input: document.getElementById('phone'),
+                error: document.getElementById('phoneError'),
+                validate(value) {
+                    const trimmed = value.trim();
+                    if (!trimmed) return 'This field is required';
+                    const digits = trimmed.replace(/\D/g, '');
+                    if (digits.length < 7) return 'Enter a valid phone number';
+                    return '';
+                }
+            },
+            company: {
+                input: document.getElementById('company'),
+                error: document.getElementById('companyError'),
+                validate(value) {
+                    if (!value.trim()) return 'This field is required';
+                    return '';
+                }
+            },
+            businessLocation: {
+                input: businessLocation,
+                error: document.getElementById('businessLocationError'),
+                validate(value) {
+                    if (!value) return 'Please select a region';
+                    return '';
+                }
+            },
+            otherCountry: {
+                input: otherCountry,
+                error: document.getElementById('otherCountryError'),
+                validate(value) {
+                    if (businessLocation.value !== 'Other') return '';
+                    if (!value.trim()) return 'Please enter your country';
+                    return '';
+                }
+            },
+            interests: {
+                input: document.getElementById('interests'),
+                error: document.getElementById('interestsError'),
+                validate(value) {
+                    if (!value) return 'Please select an option';
+                    return '';
+                }
+            }
+        };
+
+        function setFieldError(fieldKey, message) {
+            const field = fields[fieldKey];
+            if (!field) return;
+
+            field.error.textContent = message;
+            field.error.classList.toggle('show', Boolean(message));
+            field.input.classList.toggle('error', Boolean(message));
+        }
+
+        function validateField(fieldKey, showError = true) {
+            const field = fields[fieldKey];
+            if (!field) return true;
+
+            const message = field.validate(field.input.value);
+            if (showError) {
+                setFieldError(fieldKey, message);
+            }
+            return !message;
+        }
+
+        function validateAllFields(showErrors = true) {
+            let isValid = true;
+
+            Object.keys(fields).forEach((fieldKey) => {
+                if (!validateField(fieldKey, showErrors)) {
+                    isValid = false;
+                }
+            });
+
+            return isValid;
+        }
+
+        function updateSubmitState() {
+            let isValid = true;
+
+            Object.keys(fields).forEach((fieldKey) => {
+                const field = fields[fieldKey];
+                const message = field.validate(field.input.value);
+                if (message) {
+                    isValid = false;
+                }
+            });
+
+            submitBtn.disabled = !isValid;
+        }
+
+        function toggleOtherCountryField() {
+            const isOther = businessLocation.value === 'Other';
+            otherCountryGroup.hidden = !isOther;
+
+            if (!isOther) {
+                otherCountry.value = '';
+                setFieldError('otherCountry', '');
+            }
+
+            updateSubmitState();
+        }
+
+        Object.keys(fields).forEach((fieldKey) => {
+            const field = fields[fieldKey];
+            const eventType = field.input.tagName === 'SELECT' ? 'change' : 'input';
+
+            field.input.addEventListener(eventType, () => {
+                validateField(fieldKey, true);
+                updateSubmitState();
+            });
+
+            field.input.addEventListener('blur', () => {
+                validateField(fieldKey, true);
+                updateSubmitState();
+            });
+        });
+
+        businessLocation.addEventListener('change', () => {
+            validateField('businessLocation', true);
+            toggleOtherCountryField();
+        });
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // Clear previous error messages
-            document.querySelectorAll('.error-message').forEach(el => {
-                el.classList.remove('show');
-            });
-
-            // Validate form
-            const firstName = document.getElementById('firstName').value.trim();
-            const lastName = document.getElementById('lastName').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            const company = document.getElementById('company').value.trim();
-
-            let isValid = true;
-
-            if (!firstName) {
-                document.getElementById('firstNameError').textContent = 'Required';
-                document.getElementById('firstNameError').classList.add('show');
-                isValid = false;
+            if (!validateAllFields(true)) {
+                updateSubmitState();
+                return;
             }
 
-            if (!lastName) {
-                document.getElementById('lastNameError').textContent = 'Required';
-                document.getElementById('lastNameError').classList.add('show');
-                isValid = false;
-            }
-
-            if (!email || !email.includes('@')) {
-                document.getElementById('emailError').textContent = 'Valid email required';
-                document.getElementById('emailError').classList.add('show');
-                isValid = false;
-            }
-
-            if (!phone) {
-                document.getElementById('phoneError').textContent = 'Required';
-                document.getElementById('phoneError').classList.add('show');
-                isValid = false;
-            }
-
-            if (!company) {
-                document.getElementById('companyError').textContent = 'Required';
-                document.getElementById('companyError').classList.add('show');
-                isValid = false;
-            }
-
-            if (!isValid) return;
-
-            // Collect form data
-            const formData = new FormData(form);
-            const interests = Array.from(document.querySelectorAll('input[name="interests"]:checked'))
-                .map(cb => cb.value)
-                .join(', ');
-
+            const businessLocationValue = businessLocation.value;
             const data = {
-                firstName,
-                lastName,
-                email,
-                phone,
-                company,
-                interests: interests || 'Not specified',
+                firstName: fields.firstName.input.value.trim(),
+                lastName: fields.lastName.input.value.trim(),
+                email: fields.email.input.value.trim(),
+                phone: fields.phone.input.value.trim(),
+                company: fields.company.input.value.trim(),
+                businessLocation: businessLocationValue,
+                otherCountry: businessLocationValue === 'Other' ? otherCountry.value.trim() : null,
+                interests: fields.interests.input.value,
                 message: document.getElementById('message').value.trim()
             };
 
             try {
-                // Send to your backend endpoint
-                // Replace with your actual endpoint
-                const response = await fetch('/api/demo-booking', {
+                await fetch('/api/demo-booking', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(data)
-                }).catch(() => {
-                    // If endpoint doesn't exist, just show success
-                    // (for development/testing)
-                    return { ok: true };
-                });
+                }).catch(() => ({ ok: true }));
 
-                // Show success message
                 form.style.display = 'none';
+                document.querySelector('.form-helper').style.display = 'none';
                 successMessage.classList.add('show');
                 console.log('Form data:', data);
             } catch (error) {
@@ -422,6 +557,8 @@
                 alert('An error occurred. Please try again.');
             }
         });
+
+        updateSubmitState();
     </script>
 </body>
 </html>
