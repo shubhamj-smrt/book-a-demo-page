@@ -15,6 +15,7 @@ import {
   interestOptions,
   parseDialCodeValue,
 } from "@/lib/form-config"
+import { trackEvent } from "@/lib/analytics"
 import { cn } from "@/lib/utils"
 
 type FormValues = {
@@ -157,6 +158,11 @@ export function BookDemoForm() {
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
 
+    trackEvent("demo_button_clicked", {
+      form_name: "book_demo",
+      page_location: "book_a_demo_page",
+    })
+
     const { dialCode, abbr } = parseDialCodeValue(values.phonePrefix)
     const phoneNumber = values.phone.trim()
 
@@ -176,14 +182,17 @@ export function BookDemoForm() {
     }
 
     try {
-      await fetch("/api/demo-booking", {
+      const response = await fetch("/api/demo-booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      }).catch(() => ({ ok: true }))
+      })
+
+      if (!response.ok) {
+        throw new Error("Submission failed")
+      }
 
       setIsSubmitted(true)
-      console.log("Form data:", payload)
     } catch (error) {
       console.error("Error:", error)
       alert("An error occurred. Please try again.")
