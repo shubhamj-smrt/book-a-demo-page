@@ -176,14 +176,17 @@ export function BookDemoForm() {
     }
 
     try {
-      await fetch("/api/demo-booking", {
+      const response = await fetch("/api/demo-booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      }).catch(() => ({ ok: true }))
+      })
+
+      if (!response.ok) {
+        throw new Error("Submission failed")
+      }
 
       setIsSubmitted(true)
-      console.log("Form data:", payload)
     } catch (error) {
       console.error("Error:", error)
       alert("An error occurred. Please try again.")
