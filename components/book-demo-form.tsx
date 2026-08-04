@@ -15,6 +15,7 @@ import {
   interestOptions,
   parseDialCodeValue,
 } from "@/lib/form-config"
+import { trackEvent } from "@/lib/analytics"
 import { cn } from "@/lib/utils"
 
 type FormValues = {
@@ -156,6 +157,11 @@ export function BookDemoForm() {
     const nextErrors = validate(values)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
+
+    trackEvent("demo_button_clicked", {
+      form_name: "book_demo",
+      page_location: "book_a_demo_page",
+    })
 
     const { dialCode, abbr } = parseDialCodeValue(values.phonePrefix)
     const phoneNumber = values.phone.trim()
