@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { AnimatePresence, motion } from "framer-motion"
 import { Check, ChevronDown } from "lucide-react"
 
@@ -37,19 +38,19 @@ type AnimatedDropdownProps = AnimatedDropdownBaseProps &
   )
 
 function useClickOutside(
-  ref: React.RefObject<HTMLElement | null>,
+  refs: React.RefObject<HTMLElement | null>[],
   handler: () => void
 ) {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        handler()
-      }
+      const target = event.target as Node
+      if (refs.some((ref) => ref.current?.contains(target))) return
+      handler()
     }
 
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [ref, handler])
+  }, [refs, handler])
 }
 
 export function AnimatedDropdown({
@@ -66,9 +67,42 @@ export function AnimatedDropdown({
   id,
 }: AnimatedDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [menuStyle, setMenuStyle] = useState<{ top: number; left: number; width: number } | null>(
+    null
+  )
   const wrapperRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
 
-  useClickOutside(wrapperRef, () => setIsOpen(false))
+  useClickOutside([wrapperRef, menuRef], () => setIsOpen(false))
+
+  const updateMenuPosition = () => {
+    const trigger = wrapperRef.current
+    if (!trigger) return
+
+    const rect = trigger.getBoundingClientRect()
+    setMenuStyle({
+      top: rect.bottom + 6,
+      left: rect.left,
+      width: fitContent ? Math.max(rect.width, 144) : rect.width,
+    })
+  }
+
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      setMenuStyle(null)
+      return
+    }
+
+    updateMenuPosition()
+
+    window.addEventListener("resize", updateMenuPosition)
+    window.addEventListener("scroll", updateMenuPosition, true)
+
+    return () => {
+      window.removeEventListener("resize", updateMenuPosition)
+      window.removeEventListener("scroll", updateMenuPosition, true)
+    }
+  }, [isOpen, fitContent])
 
   const selectedValues = multiple ? value : value ? [value] : []
   const selectedOptions = options.filter((option) => selectedValues.includes(option.value))
@@ -134,51 +168,62 @@ export function AnimatedDropdown({
       </button>
 
       <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            role="listbox"
-            aria-multiselectable={multiple || undefined}
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-            className={cn(
-              "absolute top-[calc(100%+0.375rem)] left-0 z-50 overflow-hidden rounded-md border border-input bg-white shadow-[0_4px_16px_rgba(0,0,0,0.08)]",
-              fitContent ? "min-w-full w-max" : "w-full",
-              menuClassName
-            )}
-          >
-            {options.map((option, index) => (
-              <motion.button
-                key={`${option.value}-${index}`}
-                type="button"
-                role="option"
-                aria-selected={isSelected(option.value)}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.15, delay: index * 0.02 }}
-                onClick={() => handleOptionClick(option.value)}
-                className={cn(
-                  "flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-foreground transition-colors",
-                  "hover:bg-[#f5f5f5]",
-                  isSelected(option.value) && "bg-[#f0f0f0] font-medium"
-                )}
-              >
-                {multiple && (
-                  <span
-                    className={cn(
-                      "flex size-4 shrink-0 items-center justify-center rounded border border-input",
-                      isSelected(option.value) && "border-primary bg-primary text-primary-foreground"
-                    )}
-                  >
-                    {isSelected(option.value) && <Check className="size-3" strokeWidth={3} />}
-                  </span>
-                )}
-                {option.label}
-              </motion.button>
-            ))}
-          </motion.div>
-        )}
+        {isOpen &&
+          menuStyle &&
+          typeof document !== "undefined" &&
+          createPortal(
+            <motion.div
+              ref={menuRef}
+              role="listbox"
+              aria-multiselectable={multiple || undefined}
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              style={{
+                position: "fixed",
+                top: menuStyle.top,
+                left: menuStyle.left,
+                width: menuStyle.width,
+              }}
+              className={cn(
+                "z-[9999] overflow-hidden rounded-md border border-input bg-white shadow-[0_4px_16px_rgba(0,0,0,0.08)]",
+                menuClassName
+              )}
+            >
+              {options.map((option, index) => (
+                <motion.button
+                  key={`${option.value}-${index}`}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected(option.value)}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.15, delay: index * 0.02 }}
+                  onClick={() => handleOptionClick(option.value)}
+                  className={cn(
+                    "flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-foreground transition-colors",
+                    "hover:bg-[#f5f5f5]",
+                    isSelected(option.value) && "bg-[#f0f0f0] font-medium"
+                  )}
+                >
+                  {multiple && (
+                    <span
+                      className={cn(
+                        "flex size-4 shrink-0 items-center justify-center rounded border border-input",
+                        isSelected(option.value) &&
+                          "border-primary bg-primary text-primary-foreground"
+                      )}
+                    >
+                      {isSelected(option.value) && <Check className="size-3" strokeWidth={3} />}
+                    </span>
+                  )}
+                  {option.label}
+                </motion.button>
+              ))}
+            </motion.div>,
+            document.body
+          )}
       </AnimatePresence>
     </div>
   )
