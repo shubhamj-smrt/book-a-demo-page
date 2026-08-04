@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { AnimatePresence, motion } from "framer-motion"
 import { Check, ChevronDown } from "lucide-react"
@@ -37,22 +37,6 @@ type AnimatedDropdownProps = AnimatedDropdownBaseProps &
       }
   )
 
-function useClickOutside(
-  refs: React.RefObject<HTMLElement | null>[],
-  handler: () => void
-) {
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node
-      if (refs.some((ref) => ref.current?.contains(target))) return
-      handler()
-    }
-
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [refs, handler])
-}
-
 export function AnimatedDropdown({
   options,
   value,
@@ -67,15 +51,36 @@ export function AnimatedDropdown({
   id,
 }: AnimatedDropdownProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const [menuStyle, setMenuStyle] = useState<{ top: number; left: number; width: number } | null>(
     null
   )
   const wrapperRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
-  useClickOutside([wrapperRef, menuRef], () => setIsOpen(false))
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
-  const updateMenuPosition = () => {
+  const closeMenu = useCallback(() => {
+    setIsOpen(false)
+  }, [])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node
+      if (wrapperRef.current?.contains(target)) return
+      if (menuRef.current?.contains(target)) return
+      closeMenu()
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown)
+    return () => document.removeEventListener("pointerdown", handlePointerDown)
+  }, [isOpen, closeMenu])
+
+  const updateMenuPosition = useCallback(() => {
     const trigger = wrapperRef.current
     if (!trigger) return
 
@@ -85,7 +90,7 @@ export function AnimatedDropdown({
       left: rect.left,
       width: fitContent ? Math.max(rect.width, 144) : rect.width,
     })
-  }
+  }, [fitContent])
 
   useLayoutEffect(() => {
     if (!isOpen) {
@@ -102,7 +107,7 @@ export function AnimatedDropdown({
       window.removeEventListener("resize", updateMenuPosition)
       window.removeEventListener("scroll", updateMenuPosition, true)
     }
-  }, [isOpen, fitContent])
+  }, [isOpen, updateMenuPosition])
 
   const selectedValues = multiple ? value : value ? [value] : []
   const selectedOptions = options.filter((option) => selectedValues.includes(option.value))
@@ -127,52 +132,12 @@ export function AnimatedDropdown({
     setIsOpen(false)
   }
 
-  return (
-    <div
-      ref={wrapperRef}
-      data-state={isOpen ? "open" : "closed"}
-      className={cn("relative", fitContent ? "w-auto shrink-0" : "w-full", className)}
-    >
-      <button
-        id={id}
-        type="button"
-        aria-haspopup="listbox"
-        aria-expanded={isOpen}
-        aria-invalid={ariaInvalid}
-        onClick={() => setIsOpen((open) => !open)}
-        className={cn(
-          "inline-flex h-10 items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 text-sm text-foreground transition-colors outline-none",
-          fitContent ? "w-auto min-w-[5.75rem] whitespace-nowrap" : "w-full",
-          "hover:bg-[#f5f5f5]",
-          "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
-          isOpen && "relative z-20 border-ring bg-white ring-3 ring-ring/20",
-          ariaInvalid && "border-destructive bg-destructive/5 ring-destructive/20",
-          triggerClassName
-        )}
-      >
-        <span
-          className={cn(
-            "truncate text-left",
-            selectedOptions.length === 0 && "font-normal text-muted-foreground"
-          )}
-        >
-          {displayLabel}
-        </span>
-        <motion.span
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.2, ease: "easeInOut" }}
-          className="shrink-0 text-foreground/70"
-        >
-          <ChevronDown className="size-4" />
-        </motion.span>
-      </button>
-
-      <AnimatePresence>
-        {isOpen &&
-          menuStyle &&
-          typeof document !== "undefined" &&
-          createPortal(
+  const menu =
+    mounted && isOpen && menuStyle
+      ? createPortal(
+          <AnimatePresence>
             <motion.div
+              key="dropdown-menu"
               ref={menuRef}
               role="listbox"
               aria-multiselectable={multiple || undefined}
@@ -192,14 +157,11 @@ export function AnimatedDropdown({
               )}
             >
               {options.map((option, index) => (
-                <motion.button
+                <button
                   key={`${option.value}-${index}`}
                   type="button"
                   role="option"
                   aria-selected={isSelected(option.value)}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.15, delay: index * 0.02 }}
                   onClick={() => handleOptionClick(option.value)}
                   className={cn(
                     "flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-foreground transition-colors",
@@ -219,12 +181,56 @@ export function AnimatedDropdown({
                     </span>
                   )}
                   {option.label}
-                </motion.button>
+                </button>
               ))}
-            </motion.div>,
-            document.body
+            </motion.div>
+          </AnimatePresence>,
+          document.body
+        )
+      : null
+
+  return (
+    <>
+      <div
+        ref={wrapperRef}
+        data-state={isOpen ? "open" : "closed"}
+        className={cn("relative", fitContent ? "w-auto shrink-0" : "w-full", className)}
+      >
+        <button
+          id={id}
+          type="button"
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+          aria-invalid={ariaInvalid}
+          onClick={() => setIsOpen((open) => !open)}
+          className={cn(
+            "inline-flex h-10 items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 text-sm text-foreground transition-colors outline-none",
+            fitContent ? "w-auto min-w-[5.75rem] whitespace-nowrap" : "w-full",
+            "hover:bg-[#f5f5f5]",
+            "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+            isOpen && "relative z-20 border-ring bg-white ring-3 ring-ring/20",
+            ariaInvalid && "border-destructive bg-destructive/5 ring-destructive/20",
+            triggerClassName
           )}
-      </AnimatePresence>
-    </div>
+        >
+          <span
+            className={cn(
+              "truncate text-left",
+              selectedOptions.length === 0 && "font-normal text-muted-foreground"
+            )}
+          >
+            {displayLabel}
+          </span>
+          <motion.span
+            animate={{ rotate: isOpen ? 180 : 0 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="shrink-0 text-foreground/70"
+          >
+            <ChevronDown className="size-4" />
+          </motion.span>
+        </button>
+      </div>
+      {menu}
+    </>
   )
 }
