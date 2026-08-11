@@ -96,7 +96,7 @@ export function BookDemoForm() {
   const [values, setValues] = useState<FormValues>(initialValues)
   const [errors, setErrors] = useState<FormErrors>({})
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const hasSyncedLocationFromPhone = useRef(false)
 
   const phonePrefixOptions = useMemo(
@@ -160,7 +160,7 @@ export function BookDemoForm() {
 
     trackEvent("demo_button_clicked", {
       form_name: "book_demo",
-      page_location: "book_a_demo_page",
+      form_context: "book_a_demo_page",
     })
 
     const { dialCode, abbr } = parseDialCodeValue(values.phonePrefix)
@@ -182,6 +182,7 @@ export function BookDemoForm() {
     }
 
     try {
+      setIsSubmitting(true)
       const response = await fetch("/api/demo-booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -192,19 +193,18 @@ export function BookDemoForm() {
         throw new Error("Submission failed")
       }
 
-      setIsSubmitted(true)
+      window.open("/success", "_blank", "noopener,noreferrer")
+
+      setValues(initialValues)
+      setErrors({})
+      setHasAttemptedSubmit(false)
+      hasSyncedLocationFromPhone.current = false
     } catch (error) {
       console.error("Error:", error)
       alert("An error occurred. Please try again.")
+    } finally {
+      setIsSubmitting(false)
     }
-  }
-
-  if (isSubmitted) {
-    return (
-      <div className="rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-center text-sm text-green-800">
-        ✓ Thank you! We&apos;ll be in touch shortly to schedule your demo.
-      </div>
-    )
   }
 
   return (
@@ -277,7 +277,7 @@ export function BookDemoForm() {
             onChange={handlePhonePrefixChange}
             fitContent
             menuClassName="min-w-[9rem]"
-            triggerClassName="h-10 rounded-none rounded-l-md border-0 border-r border-input pr-2 shadow-none hover:bg-[#f5f5f5]"
+            triggerClassName="h-10 w-auto shrink-0 rounded-none rounded-l-md border-0 border-r border-input bg-transparent px-2 text-sm shadow-none hover:bg-[#f5f5f5] active:bg-[#f5f5f5]"
             aria-invalid={Boolean(errors.phone)}
           />
           <Input
@@ -371,10 +371,10 @@ export function BookDemoForm() {
 
       <Button
         type="submit"
-        disabled={!isFormValid(values)}
+        disabled={!isFormValid(values) || isSubmitting}
         className="mt-1 h-12 w-full rounded-md text-base"
       >
-        Schedule Demo
+        {isSubmitting ? "Submitting..." : "Schedule Demo"}
       </Button>
     </form>
   )

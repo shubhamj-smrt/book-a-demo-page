@@ -41,6 +41,7 @@
             font-weight: 700;
             color: #1a1a1a;
             margin-bottom: 8px;
+            text-wrap: balance;
         }
 
         .header p {
@@ -155,13 +156,24 @@
         .phone-input-group .animated-dropdown--compact .animated-dropdown-trigger {
             border-radius: 6px 0 0 6px;
             border-right: none;
-            min-height: 39px;
+            min-height: 40px;
             width: auto;
+            min-width: 0;
+            flex-shrink: 0;
+            padding: 8px 6px 8px 10px;
+            gap: 4px;
+        }
+
+        .phone-input-group .animated-dropdown--compact .animated-dropdown-label {
+            flex: 0 0 auto;
+            overflow: visible;
+            text-overflow: clip;
+            white-space: nowrap;
         }
 
         .phone-input-group .animated-dropdown--compact .animated-dropdown-menu {
             left: 0;
-            min-width: 100%;
+            min-width: max(100%, 9rem);
             transform-origin: top left;
         }
 
@@ -194,44 +206,62 @@
         }
 
         .animated-dropdown-native {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            clip-path: inset(50%) !important;
+            white-space: nowrap !important;
+            border: 0 !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
         }
 
         .animated-dropdown-trigger {
             display: inline-flex;
             width: 100%;
-            min-height: 39px;
+            min-height: 40px;
             align-items: center;
             justify-content: space-between;
             gap: 8px;
             padding: 10px 12px;
+            margin: 0;
             border: 1px solid #e0e0e0;
             border-radius: 6px;
-            background: #fafafa;
+            background: #fff;
             color: #1a1a1a;
             font-family: inherit;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
+            box-shadow: none;
+            transform: none;
             transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
-        .animated-dropdown-trigger:hover {
-            background: #f1f5f9;
+        .animated-dropdown-trigger:hover,
+        .animated-dropdown-trigger:active {
+            background: #f5f5f5;
+            color: #1a1a1a;
+            transform: none;
+            box-shadow: none;
         }
 
         .animated-dropdown-trigger:focus-visible {
             outline: none;
             border-color: #333;
-            background: white;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .animated-dropdown[data-state="open"] .animated-dropdown-trigger {
+            border-color: #333;
+            background: #fff;
             box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
         }
 
@@ -261,15 +291,18 @@
 
         .animated-dropdown-menu {
             position: absolute;
-            top: calc(100% + 0.5rem);
+            top: calc(100% + 0.375rem);
             left: 0;
-            z-index: 50;
+            z-index: 9999;
             width: 100%;
-            overflow: hidden;
-            border: 2px solid #e2e8f0;
+            max-height: min(280px, 50vh);
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid #e0e0e0;
             border-radius: 6px;
-            background: #f1f5f9;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            background: #fff;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
             opacity: 0;
             transform: translateY(-10px) scale(0.95);
             transform-origin: top center;
@@ -279,7 +312,7 @@
 
         .animated-dropdown--compact .animated-dropdown-menu {
             width: max-content;
-            min-width: 100%;
+            min-width: 9rem;
         }
 
         .animated-dropdown-menu.is-open {
@@ -289,39 +322,77 @@
         }
 
         .animated-dropdown-option {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 8px;
             width: 100%;
-            padding: 8px 12px;
+            padding: 10px 12px;
+            margin: 0;
             border: none;
-            border-bottom: 2px solid #e2e8f0;
-            background: #f8fafc;
+            border-radius: 0;
+            border-bottom: none;
+            background: #fff;
             color: #1a1a1a;
             font-family: inherit;
             font-size: 14px;
+            font-weight: 400;
             text-align: left;
             cursor: pointer;
+            box-shadow: none;
             opacity: 0;
             transform: translateX(-12px);
             transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .animated-dropdown-option-check {
+            display: none;
+            flex-shrink: 0;
+            width: 16px;
+            height: 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 3px;
+            background: #fff;
+            position: relative;
+        }
+
+        .animated-dropdown--multiple .animated-dropdown-option-check {
+            display: inline-block;
+        }
+
+        .animated-dropdown-option.is-selected .animated-dropdown-option-check {
+            border-color: #1a1a1a;
+            background: #1a1a1a;
+        }
+
+        .animated-dropdown-option.is-selected .animated-dropdown-option-check::after {
+            content: '';
+            position: absolute;
+            left: 4px;
+            top: 1px;
+            width: 4px;
+            height: 8px;
+            border: solid #fff;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
         }
 
         .animated-dropdown-menu.is-open .animated-dropdown-option {
             animation: dropdown-item-in 0.2s ease-out forwards;
         }
 
-        .animated-dropdown-option:last-child {
-            border-bottom: none;
-        }
-
         .animated-dropdown-option:hover,
+        .animated-dropdown-option:active,
         .animated-dropdown-option:focus-visible {
-            background: #e2e8f0;
+            background: #f5f5f5 !important;
+            color: #1a1a1a !important;
             outline: none;
+            transform: none;
+            box-shadow: none;
         }
 
         .animated-dropdown-option.is-selected {
-            background: #e2e8f0;
-            font-weight: 600;
+            background: #f0f0f0;
+            font-weight: 500;
         }
 
         .animated-dropdown.has-error .animated-dropdown-trigger {
@@ -336,7 +407,7 @@
             }
         }
 
-        button {
+        #submitBtn {
             width: 100%;
             padding: 12px 24px;
             font-size: 14px;
@@ -350,17 +421,17 @@
             margin-top: 8px;
         }
 
-        button:hover:not(:disabled) {
+        #submitBtn:hover:not(:disabled) {
             background: #333;
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
-        button:active:not(:disabled) {
+        #submitBtn:active:not(:disabled) {
             transform: translateY(0);
         }
 
-        button:disabled {
+        #submitBtn:disabled {
             background: #ccc;
             cursor: not-allowed;
             transform: none;
@@ -405,6 +476,43 @@
 
             .form-row {
                 grid-template-columns: 1fr;
+            }
+
+            .animated-dropdown-trigger {
+                min-height: 44px;
+                font-size: 14px;
+            }
+
+            .animated-dropdown-option {
+                padding: 12px;
+                font-size: 14px;
+            }
+
+            .animated-dropdown-menu {
+                max-height: min(240px, 45vh);
+            }
+
+            .phone-input-group .animated-dropdown--compact .animated-dropdown-trigger {
+                min-height: 44px;
+                font-size: 14px;
+            }
+
+            .phone-input-group .animated-dropdown--compact .animated-dropdown-label {
+                font-size: 14px;
+            }
+
+            input[type="text"],
+            input[type="email"],
+            input[type="tel"],
+            select,
+            textarea,
+            .phone-input-group input[type="tel"] {
+                font-size: 14px;
+                padding: 10px 12px;
+            }
+
+            label {
+                font-size: 13px;
             }
         }
 
@@ -454,19 +562,39 @@
             input[type="email"],
             input[type="tel"],
             select,
-            textarea {
-                padding: 8px 10px;
-                font-size: 16px;
+            textarea,
+            .phone-input-group input[type="tel"] {
+                padding: 10px 12px;
+                font-size: 14px;
             }
 
             textarea {
                 min-height: 70px;
             }
 
-            button {
+            #submitBtn {
                 padding: 10px 20px;
                 font-size: 13px;
                 margin-top: 6px;
+            }
+
+            .animated-dropdown-trigger,
+            .phone-input-group .animated-dropdown--compact .animated-dropdown-trigger {
+                min-height: 44px;
+                font-size: 14px;
+            }
+
+            .animated-dropdown-option {
+                padding: 12px;
+                font-size: 14px;
+            }
+
+            .animated-dropdown-menu {
+                max-height: min(240px, 45vh);
+            }
+
+            .phone-input-group .animated-dropdown--compact .animated-dropdown-label {
+                font-size: 14px;
             }
 
             .success-message {
@@ -488,7 +616,7 @@
         </div>
 
         <div class="header">
-            <h1>Schedule a Meeting with SMRT</h1>
+            <h1>Schedule a Meeting with&nbsp;SMRT</h1>
         </div>
 
         <p class="form-helper"><span class="required-mark">*</span> Required fields</p>
@@ -519,9 +647,12 @@
                     <div class="phone-prefix-wrap">
                         <select id="phonePrefix" name="phonePrefix" aria-label="Country code">
                             <option value="+1|US">+1 US</option>
+                            <option value="+1|CA">+1 CA</option>
                             <option value="+44|UK">+44 UK</option>
+                            <option value="+971|UAE">+971 UAE</option>
                             <option value="+61|AU">+61 AU</option>
                             <option value="+91|IN">+91 IN</option>
+                            <option value="+46|SE">+46 SE</option>
                         </select>
                     </div>
                     <input type="tel" id="phone" name="phone" placeholder="555 123 4567" required>
@@ -556,11 +687,9 @@
 
             <div class="form-group">
                 <label for="interests">What are you interested in?<span class="required-mark"> *</span></label>
-                <select id="interests" name="interests" required>
-                    <option value="" selected disabled>Select an option</option>
-                    <option value="Platform Overview">Platform Overview</option>
-                    <option value="Pricing">Pricing</option>
-                    <option value="Integration">Integration</option>
+                <select id="interests" name="interests" multiple required>
+                    <option value="SMRT Point of Sale">SMRT Point of Sale</option>
+                    <option value="SMRT Marketing">SMRT Marketing</option>
                 </select>
                 <div class="error-message" id="interestsError"></div>
             </div>
@@ -595,14 +724,21 @@
         }
 
         function initAnimatedDropdown(select, options = {}) {
-            const { compact = false } = options;
+            const { compact = false, multiple = false, placeholder } = options;
 
             select.classList.add('animated-dropdown-native');
             select.tabIndex = -1;
             select.setAttribute('aria-hidden', 'true');
+            if (multiple) {
+                select.multiple = true;
+            }
 
             const wrapper = document.createElement('div');
-            wrapper.className = compact ? 'animated-dropdown animated-dropdown--compact' : 'animated-dropdown';
+            wrapper.className = compact
+                ? 'animated-dropdown animated-dropdown--compact'
+                : multiple
+                  ? 'animated-dropdown animated-dropdown--multiple'
+                  : 'animated-dropdown';
 
             select.parentNode.insertBefore(wrapper, select);
             wrapper.appendChild(select);
@@ -625,6 +761,9 @@
             const menu = document.createElement('div');
             menu.className = 'animated-dropdown-menu';
             menu.setAttribute('role', 'listbox');
+            if (multiple) {
+                menu.setAttribute('aria-multiselectable', 'true');
+            }
 
             wrapper.append(trigger, menu);
 
@@ -635,20 +774,30 @@
                 label,
                 menu,
                 isOpen: false,
+                multiple,
 
                 getPlaceholderText() {
+                    if (placeholder) return placeholder;
                     const placeholderOption = Array.from(select.options).find((option) => !option.value);
                     return placeholderOption ? placeholderOption.textContent.trim() : 'Select an option';
                 },
 
+                getSelectedOptions() {
+                    return Array.from(select.options).filter(
+                        (option) => option.selected && option.value !== ''
+                    );
+                },
+
                 getSelectedOption() {
-                    return Array.from(select.options).find((option) => option.value === select.value && option.value !== '');
+                    return this.getSelectedOptions()[0] || null;
                 },
 
                 updateLabel() {
-                    const selectedOption = this.getSelectedOption();
-                    if (selectedOption) {
-                        label.textContent = selectedOption.textContent.trim();
+                    const selectedOptions = this.getSelectedOptions();
+                    if (selectedOptions.length > 0) {
+                        label.textContent = selectedOptions
+                            .map((option) => option.textContent.trim())
+                            .join(', ');
                         label.classList.remove('is-placeholder');
                     } else {
                         label.textContent = this.getPlaceholderText();
@@ -667,8 +816,20 @@
                     if (!context) return;
 
                     context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
-                    const labelWidth = context.measureText(label.textContent).width;
-                    trigger.style.width = `${Math.ceil(labelWidth) + 44}px`;
+
+                    // Size to the current label only so short codes like "+1 US" stay tight.
+                    const labelWidth = context.measureText(label.textContent || '').width;
+                    const paddingLeft = parseFloat(style.paddingLeft) || 10;
+                    const paddingRight = parseFloat(style.paddingRight) || 6;
+                    const gap = parseFloat(style.columnGap || style.gap) || 4;
+                    const chevronWidth = 14;
+                    const safety = 2;
+                    const width = Math.ceil(
+                        labelWidth + paddingLeft + paddingRight + gap + chevronWidth + safety
+                    );
+
+                    trigger.style.width = `${width}px`;
+                    trigger.style.minWidth = `${width}px`;
                 },
 
                 refresh() {
@@ -682,15 +843,31 @@
                         item.className = 'animated-dropdown-option';
                         item.setAttribute('role', 'option');
                         item.dataset.value = option.value;
-                        item.textContent = option.textContent.trim();
                         item.style.animationDelay = `${index * 0.03}s`;
 
-                        if (option.value === select.value) {
+                        const check = document.createElement('span');
+                        check.className = 'animated-dropdown-option-check';
+                        check.setAttribute('aria-hidden', 'true');
+
+                        const text = document.createElement('span');
+                        text.textContent = option.textContent.trim();
+
+                        item.append(check, text);
+
+                        if (option.selected) {
                             item.classList.add('is-selected');
                             item.setAttribute('aria-selected', 'true');
                         }
 
                         item.addEventListener('click', () => {
+                            if (multiple) {
+                                option.selected = !option.selected;
+                                select.dispatchEvent(new Event('change', { bubbles: true }));
+                                this.refresh();
+                                updateSubmitState();
+                                return;
+                            }
+
                             select.value = option.value;
                             select.dispatchEvent(new Event('change', { bubbles: true }));
                             this.updateLabel();
@@ -750,69 +927,84 @@
             return dropdown;
         }
 
+        // Full phone prefix list — always shown regardless of business location.
+        // Keep in sync with Next.js `phonePrefixOptionsList` (do not add countries here).
+        const phonePrefixOptionsList = [
+            { dialCode: '+1', abbr: 'US', label: '+1 US' },
+            { dialCode: '+1', abbr: 'CA', label: '+1 CA' },
+            { dialCode: '+44', abbr: 'UK', label: '+44 UK' },
+            { dialCode: '+971', abbr: 'UAE', label: '+971 UAE' },
+            { dialCode: '+61', abbr: 'AU', label: '+61 AU' },
+            { dialCode: '+91', abbr: 'IN', label: '+91 IN' },
+            { dialCode: '+46', abbr: 'SE', label: '+46 SE' },
+        ];
+
+        // Used only to map a phone prefix → business location (one-time sync).
         const regionDialCodes = {
-            '': [
-                { dialCode: '+1', abbr: 'US', label: '+1 US' },
-                { dialCode: '+1', abbr: 'CA', label: '+1 CA' },
-                { dialCode: '+44', abbr: 'UK', label: '+44 UK' },
-                { dialCode: '+61', abbr: 'AU', label: '+61 AU' },
-                { dialCode: '+91', abbr: 'IN', label: '+91 IN' },
-                { dialCode: '+49', abbr: 'DE', label: '+49 DE' },
-                { dialCode: '+971', abbr: 'UAE', label: '+971 UAE' }
-            ],
             'North America': [
                 { dialCode: '+1', abbr: 'US', label: '+1 US' },
-                { dialCode: '+1', abbr: 'CA', label: '+1 CA' }
+                { dialCode: '+1', abbr: 'CA', label: '+1 CA' },
             ],
             'Australia': [
-                { dialCode: '+61', abbr: 'AU', label: '+61 AU' }
+                { dialCode: '+61', abbr: 'AU', label: '+61 AU' },
             ],
             'Europe/Middle East': [
                 { dialCode: '+44', abbr: 'UK', label: '+44 UK' },
-                { dialCode: '+49', abbr: 'DE', label: '+49 DE' },
-                { dialCode: '+33', abbr: 'FR', label: '+33 FR' },
-                { dialCode: '+39', abbr: 'IT', label: '+39 IT' },
-                { dialCode: '+34', abbr: 'ES', label: '+34 ES' },
-                { dialCode: '+31', abbr: 'NL', label: '+31 NL' },
-                { dialCode: '+41', abbr: 'CH', label: '+41 CH' },
-                { dialCode: '+46', abbr: 'SE', label: '+46 SE' },
-                { dialCode: '+47', abbr: 'NO', label: '+47 NO' },
-                { dialCode: '+48', abbr: 'PL', label: '+48 PL' },
                 { dialCode: '+971', abbr: 'UAE', label: '+971 UAE' },
-                { dialCode: '+966', abbr: 'SA', label: '+966 SA' },
-                { dialCode: '+972', abbr: 'IL', label: '+972 IL' },
-                { dialCode: '+90', abbr: 'TR', label: '+90 TR' },
-                { dialCode: '+20', abbr: 'EG', label: '+20 EG' }
+                { dialCode: '+46', abbr: 'SE', label: '+46 SE' },
             ],
             'India': [
-                { dialCode: '+91', abbr: 'IN', label: '+91 IN' }
-            ],
-            'Other': [
-                { dialCode: '+1', abbr: 'US', label: '+1 US' },
-                { dialCode: '+1', abbr: 'CA', label: '+1 CA' },
-                { dialCode: '+44', abbr: 'UK', label: '+44 UK' },
-                { dialCode: '+61', abbr: 'AU', label: '+61 AU' },
                 { dialCode: '+91', abbr: 'IN', label: '+91 IN' },
-                { dialCode: '+49', abbr: 'DE', label: '+49 DE' },
-                { dialCode: '+33', abbr: 'FR', label: '+33 FR' },
-                { dialCode: '+81', abbr: 'JP', label: '+81 JP' },
-                { dialCode: '+86', abbr: 'CN', label: '+86 CN' },
-                { dialCode: '+55', abbr: 'BR', label: '+55 BR' },
-                { dialCode: '+52', abbr: 'MX', label: '+52 MX' },
-                { dialCode: '+971', abbr: 'UAE', label: '+971 UAE' },
-                { dialCode: '+65', abbr: 'SG', label: '+65 SG' }
-            ]
+            ],
+            'Other': [],
         };
+
+        const phoneInput = document.getElementById('phone');
+
+        const phonePlaceholdersByAbbr = {
+            US: '555 123 4567',
+            CA: '416 555 0123',
+            UK: '7911 123456',
+            AU: '412 345 678',
+            IN: '98765 43210',
+            UAE: '50 123 4567',
+            SE: '70 123 45 67',
+        };
+
+        function updatePhonePlaceholder() {
+            const { abbr } = getSelectedPhonePrefix();
+            phoneInput.placeholder = phonePlaceholdersByAbbr[abbr] || '555 123 4567';
+        }
 
         function getSelectedPhonePrefix() {
             const [dialCode, abbr] = phonePrefix.value.split('|');
             return { dialCode, abbr };
         }
 
-        function updatePhonePrefixOptions() {
-            const region = businessLocation.value;
-            const codes = regionDialCodes[region] || regionDialCodes[''];
+        const businessLocationPriority = [
+            'North America',
+            'Australia',
+            'India',
+            'Europe/Middle East',
+            'Other',
+        ];
+
+        function getBusinessLocationForPhonePrefix(value) {
+            const [dialCode, abbr] = value.split('|');
+            for (const region of businessLocationPriority) {
+                const codes = regionDialCodes[region] || [];
+                if (codes.some((code) => code.dialCode === dialCode && code.abbr === abbr)) {
+                    return region;
+                }
+            }
+            return null;
+        }
+
+        let hasSyncedLocationFromPhone = false;
+
+        function renderPhonePrefixOptions() {
             const currentValue = phonePrefix.value;
+            const codes = phonePrefixOptionsList;
 
             phonePrefix.innerHTML = codes
                 .map(({ dialCode, abbr, label }) => {
@@ -827,6 +1019,7 @@
                 : `${codes[0].dialCode}|${codes[0].abbr}`;
 
             phonePrefixDropdown.refresh();
+            updatePhonePlaceholder();
         }
 
         const fields = {
@@ -898,8 +1091,11 @@
             interests: {
                 input: document.getElementById('interests'),
                 error: document.getElementById('interestsError'),
-                validate(value) {
-                    if (!value) return 'Please select an option';
+                validate() {
+                    const selected = Array.from(this.input.options).filter(
+                        (option) => option.selected && option.value
+                    );
+                    if (selected.length === 0) return 'Please select at least one option';
                     return '';
                 }
             }
@@ -932,10 +1128,15 @@
             const field = fields[fieldKey];
             if (!field) return true;
 
-            const message = field.validate(field.input.value);
-            if (showError && hasAttemptedSubmit) {
+            const message =
+                fieldKey === 'interests' ? field.validate() : field.validate(field.input.value);
+
+            if (showError) {
                 setFieldError(fieldKey, message);
+            } else if (!message) {
+                setFieldError(fieldKey, '');
             }
+
             return !message;
         }
 
@@ -956,7 +1157,8 @@
 
             Object.keys(fields).forEach((fieldKey) => {
                 const field = fields[fieldKey];
-                const message = field.validate(field.input.value);
+                const message =
+                    fieldKey === 'interests' ? field.validate() : field.validate(field.input.value);
                 if (message) {
                     isValid = false;
                 }
@@ -993,12 +1195,28 @@
             if (hasAttemptedSubmit) {
                 validateField('businessLocation', true);
             }
-            updatePhonePrefixOptions();
             toggleOtherCountryField();
         });
 
         phonePrefix.addEventListener('change', () => {
             phonePrefixDropdown.refresh();
+            updatePhonePlaceholder();
+
+            // One-time sync: first phone-prefix change fills business location.
+            // After that, the user can change location freely.
+            if (!hasSyncedLocationFromPhone) {
+                hasSyncedLocationFromPhone = true;
+                const location = getBusinessLocationForPhonePrefix(phonePrefix.value);
+                if (location) {
+                    businessLocation.value = location;
+                    businessLocationDropdown.refresh();
+                    toggleOtherCountryField();
+                    if (hasAttemptedSubmit) {
+                        validateField('businessLocation', true);
+                    }
+                }
+            }
+
             if (hasAttemptedSubmit) {
                 validateField('phone', true);
             }
@@ -1006,8 +1224,20 @@
         });
 
         const phonePrefixDropdown = initAnimatedDropdown(phonePrefix, { compact: true });
-        initAnimatedDropdown(businessLocation);
-        initAnimatedDropdown(document.getElementById('interests'));
+        const businessLocationDropdown = initAnimatedDropdown(businessLocation);
+        initAnimatedDropdown(document.getElementById('interests'), {
+            multiple: true,
+            placeholder: 'Select all that apply',
+        });
+
+        const resizePhonePrefixTrigger = () => {
+            phonePrefixDropdown.resizeCompactTrigger();
+        };
+        window.addEventListener('resize', resizePhonePrefixTrigger);
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(resizePhonePrefixTrigger);
+        }
+        requestAnimationFrame(resizePhonePrefixTrigger);
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -1032,7 +1262,9 @@
                 company: fields.company.input.value.trim(),
                 businessLocation: businessLocationValue,
                 otherCountry: businessLocationValue === 'Other' ? otherCountry.value.trim() : null,
-                interests: fields.interests.input.value,
+                interests: Array.from(fields.interests.input.options)
+                    .filter((option) => option.selected && option.value)
+                    .map((option) => option.value),
                 message: document.getElementById('message').value.trim()
             };
 
@@ -1045,17 +1277,31 @@
                     body: JSON.stringify(data)
                 }).catch(() => ({ ok: true }));
 
-                form.style.display = 'none';
-                document.querySelector('.form-helper').style.display = 'none';
-                successMessage.classList.add('show');
-                console.log('Form data:', data);
+                window.open('/success', '_blank', 'noopener,noreferrer');
+
+                form.reset();
+                Array.from(fields.interests.input.options).forEach((option) => {
+                    option.selected = false;
+                });
+                hasSyncedLocationFromPhone = false;
+                hasAttemptedSubmit = false;
+                Object.keys(fields).forEach((fieldKey) => setFieldError(fieldKey, ''));
+                businessLocationDropdown.refresh();
+                phonePrefixDropdown.refresh();
+                const interestsDropdown = animatedDropdownRegistry.find(
+                    (dropdown) => dropdown.select === fields.interests.input
+                );
+                interestsDropdown?.refresh();
+                toggleOtherCountryField();
+                updatePhonePlaceholder();
+                updateSubmitState();
             } catch (error) {
                 console.error('Error:', error);
                 alert('An error occurred. Please try again.');
             }
         });
 
-        updatePhonePrefixOptions();
+        renderPhonePrefixOptions();
         updateSubmitState();
     </script>
 </body>
