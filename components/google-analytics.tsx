@@ -15,7 +15,10 @@ export function GoogleAnalytics() {
           window.dataLayer = window.dataLayer || [];
           window.gtag = function gtag(){window.dataLayer.push(arguments);};
           window.gtag('js', new Date());
-          window.gtag('config', '${measurementId}');
+          window.gtag('config', '${measurementId}', {
+            send_page_view: true,
+            anonymize_ip: true
+          });
         `}
       </Script>
     </>

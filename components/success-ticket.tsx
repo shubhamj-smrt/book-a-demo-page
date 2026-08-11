@@ -5,15 +5,15 @@ import confetti from "canvas-confetti"
 import { motion } from "framer-motion"
 import { Check } from "lucide-react"
 
-import { trackEvent } from "@/lib/analytics"
+import { trackEventWhenReady } from "@/lib/analytics"
 
 type SuccessTicketProps = {
   title?: string
   message?: string
 }
 
-const SUCCESS_EVENT = "demo_booked"
-const SUCCESS_EVENT_KEY = "smrt_demo_booked_tracked"
+const SUCCESS_EVENT = "demo_button_clicked"
+const SUCCESS_EVENT_KEY = "smrt_demo_button_clicked_tracked"
 
 function fireSuccessConfetti() {
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -89,9 +89,17 @@ function trackDemoBookedOnce() {
     // sessionStorage unavailable — still fire the event once this mount
   }
 
-  trackEvent(SUCCESS_EVENT, {
+  const params = {
     form_name: "book_demo",
     page_path: "/success",
+    page_title: "Demo Request Confirmed | SMRT",
+  }
+
+  trackEventWhenReady(SUCCESS_EVENT, params)
+  trackEventWhenReady("generate_lead", {
+    ...params,
+    currency: "USD",
+    value: 0,
   })
 }
 
@@ -100,15 +108,10 @@ export function SuccessTicket({
   message = "Your demo has been booked. Sit back and relax, we'll take it from here.",
 }: SuccessTicketProps) {
   useEffect(() => {
-    // Wait briefly so gtag.js can finish loading from the layout script
-    const analyticsTimer = window.setTimeout(() => {
-      trackDemoBookedOnce()
-    }, 400)
+    trackDemoBookedOnce()
 
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    if (prefersReducedMotion) {
-      return () => clearTimeout(analyticsTimer)
-    }
+    if (prefersReducedMotion) return
 
     const initialTimer = window.setTimeout(() => {
       fireSuccessConfetti()
@@ -120,7 +123,6 @@ export function SuccessTicket({
     }, 15_000)
 
     return () => {
-      clearTimeout(analyticsTimer)
       clearTimeout(initialTimer)
       clearInterval(repeatTimer)
     }
