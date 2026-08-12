@@ -1,0 +1,51 @@
+[
+  {
+    "host": "Milad",
+    "region": "Europe/Middle East",
+    "interest": "POS",
+    "url": "https://demodesk.com/book/smrt-systems-team/meeting-europe",
+    "notes": "Form location: Europe/Middle East"
+  },
+  {
+    "host": "Mark",
+    "region": "Australia",
+    "interest": "POS",
+    "url": "https://demodesk.com/book/smrt-systems-team/meeting-60-min-copy",
+    "notes": "Form location: Australia"
+  },
+  {
+    "host": "Josh",
+    "region": "North America",
+    "interest": "POS",
+    "url": "https://demodesk.com/book/smrt-systems-team/demo",
+    "notes": "Shares US team link with David; rotate with Brett's link"
+  },
+  {
+    "host": "David",
+    "region": "North America",
+    "interest": "POS",
+    "url": "https://demodesk.com/book/smrt-systems-team/demo",
+    "notes": "Shares US team link with Josh; rotate with Brett's link"
+  },
+  {
+    "host": "Brett Rosenberg",
+    "region": "North America",
+    "interest": "POS",
+    "url": "https://demodesk.com/book/smrt-systems-team/meeting-60-min-copy-2",
+    "notes": "Separate US POS link; rotate with Josh/David demo link"
+  },
+  {
+    "host": "Nupur",
+    "region": "India",
+    "interest": "POS",
+    "url": "https://demodesk.com/book/smrt-systems-team/meeting-india-nupur",
+    "notes": "Form location: India"
+  },
+  {
+    "host": "Tony Hadad",
+    "region": "Australia",
+    "interest": "Marketing",
+    "url": "https://demodesk.com/book/smrt-systems-team/australia-tony-marketing-meeting",
+    "notes": "AU marketing — keep if still used"
+  }
+]

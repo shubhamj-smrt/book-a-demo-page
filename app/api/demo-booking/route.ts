@@ -19,26 +19,26 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0
 }
 
+function optionalString(value: unknown) {
+  return typeof value === "string" ? value.trim() : ""
+}
+
 function validatePayload(body: unknown): DemoBookingPayload | null {
   if (!body || typeof body !== "object") return null
 
   const data = body as Record<string, unknown>
 
-  if (
-    !isNonEmptyString(data.firstName) ||
-    !isNonEmptyString(data.lastName) ||
-    !isNonEmptyString(data.email) ||
-    !isNonEmptyString(data.phoneNumber) ||
-    !isNonEmptyString(data.company) ||
-    !isNonEmptyString(data.businessLocation)
-  ) {
+  // Contact fields (name, email, phone, company) come from Demodesk after booking.
+  if (!isNonEmptyString(data.businessLocation)) {
     return null
   }
 
-  const email = data.email.trim()
-  const emailParts = email.split("@")
-  if (emailParts.length !== 2 || !emailParts[0] || !emailParts[1]?.includes(".")) {
-    return null
+  const email = optionalString(data.email)
+  if (email) {
+    const emailParts = email.split("@")
+    if (emailParts.length !== 2 || !emailParts[0] || !emailParts[1]?.includes(".")) {
+      return null
+    }
   }
 
   if (!Array.isArray(data.interests) || data.interests.length === 0) {
@@ -52,21 +52,22 @@ function validatePayload(body: unknown): DemoBookingPayload | null {
     return null
   }
 
-  const phonePrefix = isNonEmptyString(data.phonePrefix) ? data.phonePrefix.trim() : ""
-  const phoneCountry = isNonEmptyString(data.phoneCountry) ? data.phoneCountry.trim() : ""
-  const phoneNumber = data.phoneNumber.trim()
-  const phone =
-    isNonEmptyString(data.phone) ? data.phone.trim() : `${phonePrefix} ${phoneCountry} ${phoneNumber}`.trim()
+  const phonePrefix = optionalString(data.phonePrefix)
+  const phoneCountry = optionalString(data.phoneCountry)
+  const phoneNumber = optionalString(data.phoneNumber)
+  const phone = isNonEmptyString(data.phone)
+    ? data.phone.trim()
+    : `${phonePrefix} ${phoneCountry} ${phoneNumber}`.trim()
 
   return {
-    firstName: data.firstName.trim(),
-    lastName: data.lastName.trim(),
+    firstName: optionalString(data.firstName),
+    lastName: optionalString(data.lastName),
     email,
     phonePrefix,
     phoneCountry,
     phoneNumber,
     phone,
-    company: data.company.trim(),
+    company: optionalString(data.company),
     businessLocation: data.businessLocation.trim(),
     otherCountry:
       data.businessLocation === "Other" && isNonEmptyString(data.otherCountry)
@@ -110,6 +111,14 @@ export async function POST(request: Request) {
 
   const webhookUrl = process.env.SLACK_DEMO_BOOKING_WEBHOOK_URL
   if (!webhookUrl) {
+    // Local/dev without Slack should still reach the success screen.
+    if (process.env.NODE_ENV === "development") {
+      console.warn(
+        "SLACK_DEMO_BOOKING_WEBHOOK_URL is not configured — skipping Slack in development"
+      )
+      return NextResponse.json({ ok: true, slackSkipped: true })
+    }
+
     console.error("SLACK_DEMO_BOOKING_WEBHOOK_URL is not configured")
     return NextResponse.json({ error: "Demo booking is temporarily unavailable" }, { status: 503 })
   }

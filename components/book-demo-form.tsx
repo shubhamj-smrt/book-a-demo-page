@@ -1,29 +1,20 @@
 "use client"
 
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 
 import { AnimatedDropdown } from "@/components/ui/animated-dropdown"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  businessLocationOptions,
-  dialCodeToValue,
-  getBusinessLocationForPhonePrefix,
-  getPhonePlaceholder,
-  getPhonePrefixOptions,
-  interestOptions,
-  parseDialCodeValue,
-} from "@/lib/form-config"
-import { cn } from "@/lib/utils"
+  isDemodeskMeetingScheduledEvent,
+  resolveDemodeskBookingUrl,
+  type DemodeskMeetingScheduledPayload,
+} from "@/lib/demodesk"
+import { businessLocationOptions, interestOptions } from "@/lib/form-config"
 
 type FormValues = {
-  firstName: string
-  lastName: string
-  email: string
-  phonePrefix: string
-  phone: string
-  company: string
   businessLocation: string
   otherCountry: string
   interests: string[]
@@ -31,14 +22,9 @@ type FormValues = {
 }
 
 type FormErrors = Partial<Record<keyof FormValues, string>>
+type Step = "business-details" | "schedule"
 
 const initialValues: FormValues = {
-  firstName: "",
-  lastName: "",
-  email: "",
-  phonePrefix: "+1|US",
-  phone: "",
-  company: "",
   businessLocation: "",
   otherCountry: "",
   interests: [],
@@ -48,27 +34,6 @@ const initialValues: FormValues = {
 function validate(values: FormValues): FormErrors {
   const errors: FormErrors = {}
 
-  if (!values.firstName.trim()) errors.firstName = "This field is required"
-  if (!values.lastName.trim()) errors.lastName = "This field is required"
-
-  const email = values.email.trim()
-  if (!email) {
-    errors.email = "This field is required"
-  } else {
-    const parts = email.split("@")
-    if (parts.length !== 2 || !parts[0] || !parts[1] || !parts[1].includes(".")) {
-      errors.email = "Enter a valid email address"
-    }
-  }
-
-  const phone = values.phone.trim()
-  if (!phone) {
-    errors.phone = "This field is required"
-  } else if (phone.replace(/\D/g, "").length < 7) {
-    errors.phone = "Enter a valid phone number"
-  }
-
-  if (!values.company.trim()) errors.company = "This field is required"
   if (!values.businessLocation) errors.businessLocation = "Please select a region"
   if (values.businessLocation === "Other" && !values.otherCountry.trim()) {
     errors.otherCountry = "Please enter your country"
@@ -91,26 +56,53 @@ function FieldError({ message }: { message?: string }) {
   return <p className="mt-1 text-xs text-destructive">{message}</p>
 }
 
-export function BookDemoForm() {
+function buildPayload(
+  values: FormValues,
+  demodesk?: DemodeskMeetingScheduledPayload
+) {
+  const demodeskForm = demodesk?.form
+  const phone = demodeskForm?.customer_phone?.trim() || ""
+
+  return {
+    firstName: demodeskForm?.customer_first_name?.trim() || "",
+    lastName: demodeskForm?.customer_last_name?.trim() || "",
+    email: demodeskForm?.customer_email?.trim() || "",
+    phonePrefix: "",
+    phoneCountry: "",
+    phoneNumber: phone,
+    phone,
+    company: demodeskForm?.customer_company_name?.trim() || "",
+    businessLocation: values.businessLocation,
+    otherCountry: values.businessLocation === "Other" ? values.otherCountry.trim() : null,
+    interests: values.interests,
+    message: values.message.trim(),
+  }
+}
+
+type BookDemoFormProps = {
+  onScheduleStepChange?: (isScheduleStep: boolean) => void
+}
+
+export function BookDemoForm({ onScheduleStepChange }: BookDemoFormProps) {
+  const router = useRouter()
+  const [step, setStep] = useState<Step>("business-details")
   const [values, setValues] = useState<FormValues>(initialValues)
   const [errors, setErrors] = useState<FormErrors>({})
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const hasSyncedLocationFromPhone = useRef(false)
+  const [bookingUrl, setBookingUrl] = useState<string | null>(null)
+  const [canFinish, setCanFinish] = useState(false)
+  const demodeskPayloadRef = useRef<DemodeskMeetingScheduledPayload | undefined>(undefined)
+  const hasSubmittedBooking = useRef(false)
+  const valuesRef = useRef(values)
 
-  const phonePrefixOptions = useMemo(
-    () =>
-      getPhonePrefixOptions().map((code) => ({
-        value: dialCodeToValue(code),
-        label: code.label,
-      })),
-    []
-  )
+  useEffect(() => {
+    valuesRef.current = values
+  }, [values])
 
-  const phonePlaceholder = useMemo(
-    () => getPhonePlaceholder(values.phonePrefix),
-    [values.phonePrefix]
-  )
+  useEffect(() => {
+    onScheduleStepChange?.(step === "schedule")
+  }, [step, onScheduleStepChange])
 
   const updateField = <K extends keyof FormValues>(key: K, value: FormValues[K]) => {
     let next: FormValues = { ...values, [key]: value }
@@ -126,30 +118,7 @@ export function BookDemoForm() {
     }
   }
 
-  const handlePhonePrefixChange = (value: string) => {
-    if (value === values.phonePrefix) return
-
-    let next: FormValues = { ...values, phonePrefix: value }
-
-    if (!hasSyncedLocationFromPhone.current) {
-      hasSyncedLocationFromPhone.current = true
-      const location = getBusinessLocationForPhonePrefix(value)
-      if (location) {
-        next.businessLocation = location
-        if (location !== "Other") {
-          next.otherCountry = ""
-        }
-      }
-    }
-
-    setValues(next)
-
-    if (hasAttemptedSubmit) {
-      setErrors(validate(next))
-    }
-  }
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const goToSchedule = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setHasAttemptedSubmit(true)
 
@@ -157,150 +126,115 @@ export function BookDemoForm() {
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) return
 
-    const { dialCode, abbr } = parseDialCodeValue(values.phonePrefix)
-    const phoneNumber = values.phone.trim()
+    const url = resolveDemodeskBookingUrl(values.interests, values.businessLocation)
+    setBookingUrl(url)
+    hasSubmittedBooking.current = false
+    demodeskPayloadRef.current = undefined
+    setCanFinish(false)
+    setStep("schedule")
+  }
 
-    const payload = {
-      firstName: values.firstName.trim(),
-      lastName: values.lastName.trim(),
-      email: values.email.trim(),
-      phonePrefix: dialCode,
-      phoneCountry: abbr,
-      phoneNumber,
-      phone: `${dialCode} ${abbr} ${phoneNumber}`.trim(),
-      company: values.company.trim(),
-      businessLocation: values.businessLocation,
-      otherCountry: values.businessLocation === "Other" ? values.otherCountry.trim() : null,
-      interests: values.interests,
-      message: values.message.trim(),
-    }
+  const goBackToDetails = () => {
+    setCanFinish(false)
+    demodeskPayloadRef.current = undefined
+    setStep("business-details")
+  }
+
+  const finalizeBooking = async (demodesk?: DemodeskMeetingScheduledPayload) => {
+    if (hasSubmittedBooking.current || isSubmitting) return
+    hasSubmittedBooking.current = true
 
     try {
       setIsSubmitting(true)
       const response = await fetch("/api/demo-booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(buildPayload(valuesRef.current, demodesk)),
       })
 
       if (!response.ok) {
-        throw new Error("Submission failed")
+        const data = (await response.json().catch(() => null)) as { error?: string } | null
+        console.error("Demo booking submit failed:", response.status, data)
+        hasSubmittedBooking.current = false
+        alert(data?.error || "An error occurred. Please try again.")
+        return
       }
 
-      window.open("/success", "_blank", "noopener,noreferrer")
-
-      setValues(initialValues)
-      setErrors({})
-      setHasAttemptedSubmit(false)
-      hasSyncedLocationFromPhone.current = false
+      router.push("/success")
     } catch (error) {
       console.error("Error:", error)
+      hasSubmittedBooking.current = false
       alert("An error occurred. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
   }
 
+  useEffect(() => {
+    if (step !== "schedule") return
+
+    const onMessage = (event: MessageEvent) => {
+      const origin = event.origin || ""
+      if (origin && !origin.includes("demodesk.com")) return
+      if (!isDemodeskMeetingScheduledEvent(event.data)) return
+      demodeskPayloadRef.current = event.data.data
+      setCanFinish(true)
+    }
+
+    window.addEventListener("message", onMessage)
+    return () => window.removeEventListener("message", onMessage)
+  }, [step])
+
+  if (step === "schedule" && bookingUrl) {
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="overflow-hidden rounded-md border border-border bg-white">
+          <iframe
+            title="Schedule your demo"
+            src={bookingUrl}
+            className="h-[720px] w-full border-0"
+            allow="camera; microphone; fullscreen"
+          />
+        </div>
+
+        {canFinish && !isSubmitting && (
+          <p className="text-center text-sm text-[#1a7f45]">
+            Meeting booked — tap Finish to continue.
+          </p>
+        )}
+
+        {isSubmitting && (
+          <p className="text-center text-sm text-muted-foreground">Confirming your booking…</p>
+        )}
+
+        <div className="mt-1 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={goBackToDetails}
+            className="h-12 w-full rounded-md text-base"
+            disabled={isSubmitting}
+          >
+            Back
+          </Button>
+          <Button
+            type="button"
+            onClick={() => void finalizeBooking(demodeskPayloadRef.current)}
+            className="h-12 w-full rounded-md text-base"
+            disabled={!canFinish || isSubmitting}
+          >
+            {isSubmitting ? "Finishing…" : "Finish"}
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
+    <form onSubmit={goToSchedule} noValidate className="flex flex-col gap-6">
       <p className="text-sm text-muted-foreground">
         <span className="text-destructive">*</span> Required fields
       </p>
-
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="firstName">
-            First Name
-            <RequiredMark />
-          </Label>
-          <Input
-            id="firstName"
-            placeholder="Jane"
-            value={values.firstName}
-            aria-invalid={Boolean(errors.firstName)}
-            onChange={(event) => updateField("firstName", event.target.value)}
-          />
-          <FieldError message={errors.firstName} />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="lastName">
-            Last Name
-            <RequiredMark />
-          </Label>
-          <Input
-            id="lastName"
-            placeholder="Doe"
-            value={values.lastName}
-            aria-invalid={Boolean(errors.lastName)}
-            onChange={(event) => updateField("lastName", event.target.value)}
-          />
-          <FieldError message={errors.lastName} />
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="email">
-          Email Address
-          <RequiredMark />
-        </Label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="jane@company.com"
-          value={values.email}
-          aria-invalid={Boolean(errors.email)}
-          onChange={(event) => updateField("email", event.target.value)}
-        />
-        <FieldError message={errors.email} />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="phone">
-          Best number to reach you
-          <RequiredMark />
-        </Label>
-        <div
-          className={cn(
-            "relative flex rounded-md border border-input bg-transparent",
-            errors.phone && "border-destructive ring-3 ring-destructive/20"
-          )}
-        >
-          <AnimatedDropdown
-            options={phonePrefixOptions}
-            value={values.phonePrefix}
-            onChange={handlePhonePrefixChange}
-            fitContent
-            menuClassName="min-w-[9rem]"
-            triggerClassName="h-10 w-auto shrink-0 rounded-none rounded-l-md border-0 border-r border-input bg-transparent px-2 text-sm shadow-none hover:bg-[#f5f5f5] active:bg-[#f5f5f5]"
-            aria-invalid={Boolean(errors.phone)}
-          />
-          <Input
-            id="phone"
-            type="tel"
-            placeholder={phonePlaceholder}
-            value={values.phone}
-            aria-invalid={Boolean(errors.phone)}
-            onChange={(event) => updateField("phone", event.target.value)}
-            className="h-10 rounded-none rounded-r-md border-0 shadow-none focus-visible:z-10"
-          />
-        </div>
-        <FieldError message={errors.phone} />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="company">
-          Business Name
-          <RequiredMark />
-        </Label>
-        <Input
-          id="company"
-          value={values.company}
-          placeholder="The Best Dry Cleaner"
-          aria-invalid={Boolean(errors.company)}
-          onChange={(event) => updateField("company", event.target.value)}
-        />
-        <FieldError message={errors.company} />
-      </div>
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="businessLocation">
@@ -365,10 +299,10 @@ export function BookDemoForm() {
 
       <Button
         type="submit"
-        disabled={!isFormValid(values) || isSubmitting}
+        disabled={!isFormValid(values)}
         className="mt-1 h-12 w-full rounded-md text-base"
       >
-        {isSubmitting ? "Submitting..." : "Schedule Demo"}
+        Pick Date and Time
       </Button>
     </form>
   )
