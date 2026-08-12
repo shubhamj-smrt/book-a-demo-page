@@ -133,9 +133,9 @@ export function SuccessTicket({
       initial={{ opacity: 0, y: 18, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      className="relative w-full max-w-[420px]"
+      className="relative flex w-full max-w-[420px] flex-col items-center"
     >
-      <div className="relative overflow-hidden rounded-2xl border border-black/8 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.08)]">
+      <div className="relative w-full overflow-hidden rounded-2xl border border-black/8 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.08)]">
         {/* Ticket side notches */}
         <span
           aria-hidden
@@ -177,6 +177,10 @@ export function SuccessTicket({
           </p>
         </div>
       </div>
+
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        You can close this tab now.
+      </p>
     </motion.div>
   )
 }

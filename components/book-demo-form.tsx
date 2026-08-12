@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
 
 import { AnimatedDropdown } from "@/components/ui/animated-dropdown"
 import { Button } from "@/components/ui/button"
@@ -84,7 +83,6 @@ type BookDemoFormProps = {
 }
 
 export function BookDemoForm({ onScheduleStepChange }: BookDemoFormProps) {
-  const router = useRouter()
   const [step, setStep] = useState<Step>("business-details")
   const [values, setValues] = useState<FormValues>(initialValues)
   const [errors, setErrors] = useState<FormErrors>({})
@@ -95,6 +93,17 @@ export function BookDemoForm({ onScheduleStepChange }: BookDemoFormProps) {
   const demodeskPayloadRef = useRef<DemodeskMeetingScheduledPayload | undefined>(undefined)
   const hasSubmittedBooking = useRef(false)
   const valuesRef = useRef(values)
+
+  const resetForm = () => {
+    setValues(initialValues)
+    setErrors({})
+    setHasAttemptedSubmit(false)
+    setBookingUrl(null)
+    setCanFinish(false)
+    demodeskPayloadRef.current = undefined
+    hasSubmittedBooking.current = false
+    setStep("business-details")
+  }
 
   useEffect(() => {
     valuesRef.current = values
@@ -144,6 +153,9 @@ export function BookDemoForm({ onScheduleStepChange }: BookDemoFormProps) {
     if (hasSubmittedBooking.current || isSubmitting) return
     hasSubmittedBooking.current = true
 
+    // Open synchronously on the Finish click so popup blockers allow the GA success tab.
+    const successWindow = window.open("about:blank", "_blank")
+
     try {
       setIsSubmitting(true)
       const response = await fetch("/api/demo-booking", {
@@ -156,14 +168,22 @@ export function BookDemoForm({ onScheduleStepChange }: BookDemoFormProps) {
         const data = (await response.json().catch(() => null)) as { error?: string } | null
         console.error("Demo booking submit failed:", response.status, data)
         hasSubmittedBooking.current = false
+        successWindow?.close()
         alert(data?.error || "An error occurred. Please try again.")
         return
       }
 
-      router.push("/success")
+      const successUrl = `${window.location.origin}/success`
+      if (successWindow) {
+        successWindow.location.href = successUrl
+      } else {
+        window.open(successUrl, "_blank", "noopener,noreferrer")
+      }
+      resetForm()
     } catch (error) {
       console.error("Error:", error)
       hasSubmittedBooking.current = false
+      successWindow?.close()
       alert("An error occurred. Please try again.")
     } finally {
       setIsSubmitting(false)
