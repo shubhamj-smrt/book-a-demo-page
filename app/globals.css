@@ -121,10 +121,15 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
+  /* Keep embed height content-sized so Framer iframes don't leave empty space below. */
   html {
     @apply font-sans;
+    height: auto;
+    min-height: 0;
+  }
+  body {
+    @apply bg-background text-foreground;
+    height: auto;
+    min-height: 0;
   }
 }

@@ -11,6 +11,7 @@ import {
   resolveDemodeskBookingUrl,
   type DemodeskMeetingScheduledPayload,
 } from "@/lib/demodesk"
+import { postEmbedHeight } from "@/components/embed-resizer"
 import { businessLocationOptions, interestOptions } from "@/lib/form-config"
 
 type FormValues = {
@@ -214,6 +215,10 @@ export function BookDemoForm({ onScheduleStepChange }: BookDemoFormProps) {
             src={bookingUrl}
             className="h-[720px] w-full border-0"
             allow="camera; microphone; fullscreen"
+            onLoad={() => {
+              postEmbedHeight()
+              window.setTimeout(postEmbedHeight, 200)
+            }}
           />
         </div>
 
