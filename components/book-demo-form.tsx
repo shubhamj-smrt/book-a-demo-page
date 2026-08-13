@@ -213,11 +213,12 @@ export function BookDemoForm({ onScheduleStepChange }: BookDemoFormProps) {
           <iframe
             title="Schedule your demo"
             src={bookingUrl}
-            className="h-[720px] w-full border-0"
+            className="h-[min(960px,85vh)] min-h-[880px] w-full border-0"
             allow="camera; microphone; fullscreen"
             onLoad={() => {
               postEmbedHeight()
               window.setTimeout(postEmbedHeight, 200)
+              window.setTimeout(postEmbedHeight, 600)
             }}
           />
         </div>
