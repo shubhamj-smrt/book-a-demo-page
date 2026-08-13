@@ -22,7 +22,7 @@ type FormValues = {
 }
 
 type FormErrors = Partial<Record<keyof FormValues, string>>
-type Step = "business-details" | "schedule"
+export type BookDemoStep = "business-details" | "schedule" | "review"
 
 const initialValues: FormValues = {
   businessLocation: "",
@@ -56,6 +56,35 @@ function FieldError({ message }: { message?: string }) {
   return <p className="mt-1 text-xs text-destructive">{message}</p>
 }
 
+function displayValue(value?: string | null) {
+  const trimmed = value?.trim()
+  return trimmed ? trimmed : "—"
+}
+
+function formatMeetingDate(iso?: string) {
+  if (!iso) return "—"
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return iso
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  }).format(date)
+}
+
+function ReviewRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid gap-1 border-b border-border py-3 last:border-b-0 sm:grid-cols-[140px_1fr] sm:gap-4">
+      <dt className="text-sm text-muted-foreground">{label}</dt>
+      <dd className="text-sm font-medium text-foreground break-words">{value}</dd>
+    </div>
+  )
+}
+
 function buildPayload(
   values: FormValues,
   demodesk?: DemodeskMeetingScheduledPayload
@@ -80,18 +109,19 @@ function buildPayload(
 }
 
 type BookDemoFormProps = {
-  onScheduleStepChange?: (isScheduleStep: boolean) => void
+  onStepChange?: (step: BookDemoStep) => void
 }
 
-export function BookDemoForm({ onScheduleStepChange }: BookDemoFormProps) {
-  const [step, setStep] = useState<Step>("business-details")
+export function BookDemoForm({ onStepChange }: BookDemoFormProps) {
+  const [step, setStep] = useState<BookDemoStep>("business-details")
   const [values, setValues] = useState<FormValues>(initialValues)
   const [errors, setErrors] = useState<FormErrors>({})
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [bookingUrl, setBookingUrl] = useState<string | null>(null)
-  const [canFinish, setCanFinish] = useState(false)
-  const demodeskPayloadRef = useRef<DemodeskMeetingScheduledPayload | undefined>(undefined)
+  const [demodeskPayload, setDemodeskPayload] = useState<
+    DemodeskMeetingScheduledPayload | undefined
+  >(undefined)
   const hasSubmittedBooking = useRef(false)
   const valuesRef = useRef(values)
 
@@ -100,8 +130,7 @@ export function BookDemoForm({ onScheduleStepChange }: BookDemoFormProps) {
     setErrors({})
     setHasAttemptedSubmit(false)
     setBookingUrl(null)
-    setCanFinish(false)
-    demodeskPayloadRef.current = undefined
+    setDemodeskPayload(undefined)
     hasSubmittedBooking.current = false
     setStep("business-details")
   }
@@ -111,8 +140,14 @@ export function BookDemoForm({ onScheduleStepChange }: BookDemoFormProps) {
   }, [values])
 
   useEffect(() => {
-    onScheduleStepChange?.(step === "schedule")
-  }, [step, onScheduleStepChange])
+    onStepChange?.(step)
+  }, [step, onStepChange])
+
+  useEffect(() => {
+    postEmbedHeight()
+    const timers = [50, 200, 400].map((ms) => window.setTimeout(postEmbedHeight, ms))
+    return () => timers.forEach((id) => window.clearTimeout(id))
+  }, [step])
 
   const updateField = <K extends keyof FormValues>(key: K, value: FormValues[K]) => {
     let next: FormValues = { ...values, [key]: value }
@@ -139,22 +174,20 @@ export function BookDemoForm({ onScheduleStepChange }: BookDemoFormProps) {
     const url = resolveDemodeskBookingUrl(values.interests, values.businessLocation)
     setBookingUrl(url)
     hasSubmittedBooking.current = false
-    demodeskPayloadRef.current = undefined
-    setCanFinish(false)
+    setDemodeskPayload(undefined)
     setStep("schedule")
   }
 
   const goBackToDetails = () => {
-    setCanFinish(false)
-    demodeskPayloadRef.current = undefined
+    setDemodeskPayload(undefined)
     setStep("business-details")
   }
 
-  const finalizeBooking = async (demodesk?: DemodeskMeetingScheduledPayload) => {
-    if (hasSubmittedBooking.current || isSubmitting) return
+  const finalizeBooking = async () => {
+    if (hasSubmittedBooking.current || isSubmitting || !demodeskPayload) return
     hasSubmittedBooking.current = true
 
-    // Open synchronously on the Finish click so popup blockers allow the GA success tab.
+    // Open synchronously on Finish so popup blockers allow the GA success tab.
     const successWindow = window.open("about:blank", "_blank")
 
     try {
@@ -162,7 +195,7 @@ export function BookDemoForm({ onScheduleStepChange }: BookDemoFormProps) {
       const response = await fetch("/api/demo-booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildPayload(valuesRef.current, demodesk)),
+        body: JSON.stringify(buildPayload(valuesRef.current, demodeskPayload)),
       })
 
       if (!response.ok) {
@@ -198,13 +231,58 @@ export function BookDemoForm({ onScheduleStepChange }: BookDemoFormProps) {
       const origin = event.origin || ""
       if (origin && !origin.includes("demodesk.com")) return
       if (!isDemodeskMeetingScheduledEvent(event.data)) return
-      demodeskPayloadRef.current = event.data.data
-      setCanFinish(true)
+
+      setDemodeskPayload(event.data.data ?? {})
+      setStep("review")
     }
 
     window.addEventListener("message", onMessage)
     return () => window.removeEventListener("message", onMessage)
   }, [step])
+
+  if (step === "review" && demodeskPayload) {
+    const form = demodeskPayload.form
+    const fullName = [form?.customer_first_name, form?.customer_last_name]
+      .map((part) => part?.trim())
+      .filter(Boolean)
+      .join(" ")
+    const locationLabel =
+      values.businessLocation === "Other"
+        ? `${values.businessLocation} (${values.otherCountry.trim() || "—"})`
+        : values.businessLocation
+
+    return (
+      <div className="flex flex-col gap-5">
+        <p className="text-center text-sm text-muted-foreground">
+          Review your details and finish booking below.
+        </p>
+
+        <dl className="rounded-md border border-border px-4">
+          <ReviewRow label="Meeting" value={formatMeetingDate(demodeskPayload.meetingDate)} />
+          <ReviewRow label="Name" value={displayValue(fullName)} />
+          <ReviewRow label="Email" value={displayValue(form?.customer_email)} />
+          <ReviewRow label="Phone" value={displayValue(form?.customer_phone)} />
+          <ReviewRow label="Company" value={displayValue(form?.customer_company_name)} />
+          <ReviewRow label="Location" value={displayValue(locationLabel)} />
+          <ReviewRow label="Interest" value={displayValue(values.interests.join(", "))} />
+          <ReviewRow label="Message" value={displayValue(values.message)} />
+        </dl>
+
+        {isSubmitting && (
+          <p className="text-center text-sm text-muted-foreground">Confirming your booking…</p>
+        )}
+
+        <Button
+          type="button"
+          onClick={() => void finalizeBooking()}
+          className="h-12 w-full rounded-md text-base"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Finishing…" : "Finish Booking"}
+        </Button>
+      </div>
+    )
+  }
 
   if (step === "schedule" && bookingUrl) {
     return (
@@ -223,35 +301,14 @@ export function BookDemoForm({ onScheduleStepChange }: BookDemoFormProps) {
           />
         </div>
 
-        {canFinish && !isSubmitting && (
-          <p className="text-center text-sm text-[#1a7f45]">
-            Meeting booked — tap Finish to continue.
-          </p>
-        )}
-
-        {isSubmitting && (
-          <p className="text-center text-sm text-muted-foreground">Confirming your booking…</p>
-        )}
-
-        <div className="mt-1 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={goBackToDetails}
-            className="h-12 w-full rounded-md text-base"
-            disabled={isSubmitting}
-          >
-            Back
-          </Button>
-          <Button
-            type="button"
-            onClick={() => void finalizeBooking(demodeskPayloadRef.current)}
-            className="h-12 w-full rounded-md text-base"
-            disabled={!canFinish || isSubmitting}
-          >
-            {isSubmitting ? "Finishing…" : "Finish"}
-          </Button>
-        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={goBackToDetails}
+          className="h-12 w-full rounded-md text-base"
+        >
+          Back
+        </Button>
       </div>
     )
   }
