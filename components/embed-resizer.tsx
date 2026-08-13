@@ -3,20 +3,20 @@
 import { useEffect } from "react"
 
 const EMBED_ROOT_ID = "smrt-embed-root"
-const HEIGHT_BUFFER_PX = 8
+const EMBED_CARD_ATTR = "data-smrt-embed-card"
+const HEIGHT_BUFFER_PX = 4
 
 export function postEmbedHeight() {
   if (typeof window === "undefined") return
 
+  const card = document.querySelector<HTMLElement>(`[${EMBED_CARD_ATTR}]`)
   const root = document.getElementById(EMBED_ROOT_ID)
-  const measured = root
-    ? root.getBoundingClientRect().height
-    : Math.min(
-        document.body.scrollHeight,
-        document.documentElement.scrollHeight
-      )
+  const target = card ?? root
 
-  // Prefer content height so a tall Framer iframe doesn't report empty space below.
+  const measured = target
+    ? Math.max(target.scrollHeight, target.getBoundingClientRect().height)
+    : Math.min(document.body.scrollHeight, document.documentElement.scrollHeight)
+
   const height = Math.ceil(measured + HEIGHT_BUFFER_PX)
   window.parent.postMessage({ type: "smrt-embed-resize", height }, "*")
 }
@@ -43,7 +43,6 @@ export function EmbedResizer() {
     window.addEventListener("load", postEmbedHeight)
     window.addEventListener("resize", postEmbedHeight)
 
-    // Catch late layout after fonts / dropdowns / iframe loads
     const timers = [50, 200, 500, 1000].map((ms) => window.setTimeout(postEmbedHeight, ms))
 
     return () => {

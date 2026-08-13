@@ -20,11 +20,12 @@ export function BookDemoShell() {
       <main
         className={cn(
           "flex justify-center",
-          // Extra top/bottom breathing room on mobile for both form steps
-          "px-4 py-8 sm:p-5"
+          // Compact mobile padding so the Framer iframe can stay shorter
+          "px-4 py-4 sm:p-5"
         )}
       >
         <div
+          data-smrt-embed-card
           className={cn(
             "w-full rounded-xl bg-card p-6 shadow-[0_10px_40px_rgba(0,0,0,0.08)] sm:p-10",
             scheduleStep ? "max-w-[640px]" : "max-w-[500px]"
