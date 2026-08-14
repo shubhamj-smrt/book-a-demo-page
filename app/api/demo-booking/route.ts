@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 
+import { verifyTurnstileToken } from "@/lib/turnstile"
+
 type DemoBookingPayload = {
   firstName: string
   lastName: string
@@ -95,6 +97,15 @@ function toSlackWorkflowPayload(payload: DemoBookingPayload) {
   }
 }
 
+function getClientIp(request: Request) {
+  const forwarded = request.headers.get("x-forwarded-for")
+  if (forwarded) {
+    const first = forwarded.split(",")[0]?.trim()
+    if (first) return first
+  }
+  return request.headers.get("x-real-ip")?.trim() || undefined
+}
+
 export async function POST(request: Request) {
   let body: unknown
 
@@ -102,6 +113,24 @@ export async function POST(request: Request) {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+  }
+
+  const turnstileToken =
+    body && typeof body === "object" && "turnstileToken" in body
+      ? optionalString((body as Record<string, unknown>).turnstileToken)
+      : ""
+
+  const turnstile = await verifyTurnstileToken(turnstileToken, getClientIp(request))
+  if (!turnstile.ok) {
+    if (turnstile.misconfigured) {
+      console.error("TURNSTILE_SECRET_KEY is not configured")
+      return NextResponse.json(
+        { error: "Demo booking is temporarily unavailable" },
+        { status: 503 }
+      )
+    }
+    console.error("Turnstile verification failed:", turnstile.errorCodes)
+    return NextResponse.json({ error: "Security check failed" }, { status: 403 })
   }
 
   const payload = validatePayload(body)

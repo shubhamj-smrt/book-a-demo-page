@@ -7,12 +7,18 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
+  TurnstileField,
+  type TurnstileFieldHandle,
+} from "@/components/turnstile-field"
+import {
   isDemodeskMeetingScheduledEvent,
   resolveDemodeskBookingUrl,
   type DemodeskMeetingScheduledPayload,
 } from "@/lib/demodesk"
 import { postEmbedHeight } from "@/components/embed-resizer"
 import { businessLocationOptions, interestOptions } from "@/lib/form-config"
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() || ""
 
 type FormValues = {
   businessLocation: string
@@ -122,8 +128,11 @@ export function BookDemoForm({ onStepChange }: BookDemoFormProps) {
   const [demodeskPayload, setDemodeskPayload] = useState<
     DemodeskMeetingScheduledPayload | undefined
   >(undefined)
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const turnstileRef = useRef<TurnstileFieldHandle>(null)
   const hasSubmittedBooking = useRef(false)
   const valuesRef = useRef(values)
+  const turnstileRequired = Boolean(TURNSTILE_SITE_KEY)
 
   const resetForm = () => {
     setValues(initialValues)
@@ -131,6 +140,7 @@ export function BookDemoForm({ onStepChange }: BookDemoFormProps) {
     setHasAttemptedSubmit(false)
     setBookingUrl(null)
     setDemodeskPayload(undefined)
+    setTurnstileToken(null)
     hasSubmittedBooking.current = false
     setStep("business-details")
   }
@@ -185,6 +195,7 @@ export function BookDemoForm({ onStepChange }: BookDemoFormProps) {
 
   const finalizeBooking = async () => {
     if (hasSubmittedBooking.current || isSubmitting || !demodeskPayload) return
+    if (turnstileRequired && !turnstileToken) return
     hasSubmittedBooking.current = true
 
     // Open synchronously on Finish so popup blockers allow the GA success tab.
@@ -195,7 +206,10 @@ export function BookDemoForm({ onStepChange }: BookDemoFormProps) {
       const response = await fetch("/api/demo-booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildPayload(valuesRef.current, demodeskPayload)),
+        body: JSON.stringify({
+          ...buildPayload(valuesRef.current, demodeskPayload),
+          turnstileToken: turnstileToken ?? "",
+        }),
       })
 
       if (!response.ok) {
@@ -203,6 +217,10 @@ export function BookDemoForm({ onStepChange }: BookDemoFormProps) {
         console.error("Demo booking submit failed:", response.status, data)
         hasSubmittedBooking.current = false
         successWindow?.close()
+        if (response.status === 403) {
+          turnstileRef.current?.reset()
+          setTurnstileToken(null)
+        }
         alert(data?.error || "An error occurred. Please try again.")
         return
       }
@@ -268,6 +286,8 @@ export function BookDemoForm({ onStepChange }: BookDemoFormProps) {
           <ReviewRow label="Message" value={displayValue(values.message)} />
         </dl>
 
+        <TurnstileField ref={turnstileRef} onToken={setTurnstileToken} />
+
         {isSubmitting && (
           <p className="text-center text-sm text-muted-foreground">Confirming your booking…</p>
         )}
@@ -276,7 +296,7 @@ export function BookDemoForm({ onStepChange }: BookDemoFormProps) {
           type="button"
           onClick={() => void finalizeBooking()}
           className="h-12 w-full rounded-md text-base"
-          disabled={isSubmitting}
+          disabled={isSubmitting || (turnstileRequired && !turnstileToken)}
         >
           {isSubmitting ? "Finishing…" : "Finish Booking"}
         </Button>
