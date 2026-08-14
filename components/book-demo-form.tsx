@@ -16,6 +16,7 @@ import {
   getDemodeskFirstName,
   getDemodeskLastName,
   getDemodeskPhone,
+  getDemodeskSource,
   isDemodeskMeetingScheduledEvent,
   resolveDemodeskBookingUrl,
   type DemodeskMeetingScheduledPayload,
@@ -112,6 +113,7 @@ function buildPayload(
     phoneNumber: phone,
     phone,
     company: getDemodeskCompany(demodeskForm),
+    source: getDemodeskSource(demodeskForm),
     businessLocation: values.businessLocation,
     otherCountry: values.businessLocation === "Other" ? values.otherCountry.trim() : null,
     interests: values.interests,
@@ -292,6 +294,7 @@ export function BookDemoForm({ onStepChange }: BookDemoFormProps) {
           <ReviewRow label="Email" value={displayValue(getDemodeskEmail(form))} />
           <ReviewRow label="Phone" value={displayValue(getDemodeskPhone(form))} />
           <ReviewRow label="Company" value={displayValue(getDemodeskCompany(form))} />
+          <ReviewRow label="Source" value={displayValue(getDemodeskSource(form))} />
           <ReviewRow label="Location" value={displayValue(locationLabel)} />
           <ReviewRow label="Interest" value={displayValue(values.interests.join(", "))} />
           <ReviewRow label="Message" value={displayValue(values.message)} />

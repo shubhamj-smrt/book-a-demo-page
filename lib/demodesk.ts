@@ -122,6 +122,14 @@ export function getDemodeskPhone(form?: DemodeskFormFields): string {
   )
 }
 
+export function getDemodeskSource(form?: DemodeskFormFields): string {
+  return (
+    readFormString(form, "source") ||
+    readFormString(form, "lead_source") ||
+    readFormString(form, "utm_source")
+  )
+}
+
 export function isDemodeskMeetingScheduledEvent(
   data: unknown
 ): data is { event: "demodesk.meetingScheduled"; data?: DemodeskMeetingScheduledPayload } {

@@ -11,6 +11,7 @@ type DemoBookingPayload = {
   phoneNumber: string
   phone: string
   company: string
+  source: string
   businessLocation: string
   otherCountry: string | null
   interests: string[]
@@ -70,6 +71,7 @@ function validatePayload(body: unknown): DemoBookingPayload | null {
     phoneNumber,
     phone,
     company: optionalString(data.company),
+    source: optionalString(data.source),
     businessLocation: data.businessLocation.trim(),
     otherCountry:
       data.businessLocation === "Other" && isNonEmptyString(data.otherCountry)
@@ -90,6 +92,7 @@ function toSlackWorkflowPayload(payload: DemoBookingPayload) {
     phoneCountry: payload.phoneCountry,
     phoneNumber: payload.phoneNumber,
     company: payload.company,
+    source: payload.source,
     businessLocation: payload.businessLocation,
     otherCountry: payload.otherCountry ?? "",
     interests: payload.interests.join(", "),
