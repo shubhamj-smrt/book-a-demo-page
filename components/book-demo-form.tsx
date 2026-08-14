@@ -11,6 +11,11 @@ import {
   type TurnstileFieldHandle,
 } from "@/components/turnstile-field"
 import {
+  getDemodeskCompany,
+  getDemodeskEmail,
+  getDemodeskFirstName,
+  getDemodeskLastName,
+  getDemodeskPhone,
   isDemodeskMeetingScheduledEvent,
   resolveDemodeskBookingUrl,
   type DemodeskMeetingScheduledPayload,
@@ -96,17 +101,17 @@ function buildPayload(
   demodesk?: DemodeskMeetingScheduledPayload
 ) {
   const demodeskForm = demodesk?.form
-  const phone = demodeskForm?.customer_phone?.trim() || ""
+  const phone = getDemodeskPhone(demodeskForm)
 
   return {
-    firstName: demodeskForm?.customer_first_name?.trim() || "",
-    lastName: demodeskForm?.customer_last_name?.trim() || "",
-    email: demodeskForm?.customer_email?.trim() || "",
+    firstName: getDemodeskFirstName(demodeskForm),
+    lastName: getDemodeskLastName(demodeskForm),
+    email: getDemodeskEmail(demodeskForm),
     phonePrefix: "",
     phoneCountry: "",
     phoneNumber: phone,
     phone,
-    company: demodeskForm?.customer_company_name?.trim() || "",
+    company: getDemodeskCompany(demodeskForm),
     businessLocation: values.businessLocation,
     otherCountry: values.businessLocation === "Other" ? values.otherCountry.trim() : null,
     interests: values.interests,
@@ -251,6 +256,13 @@ export function BookDemoForm({ onStepChange }: BookDemoFormProps) {
       if (!isDemodeskMeetingScheduledEvent(event.data)) return
 
       setDemodeskPayload(event.data.data ?? {})
+      if (process.env.NODE_ENV === "development") {
+        console.info(
+          "[demodesk.meetingScheduled] form keys:",
+          Object.keys(event.data.data?.form ?? {})
+        )
+        console.info("[demodesk.meetingScheduled] form:", event.data.data?.form)
+      }
       setStep("review")
     }
 
@@ -260,8 +272,7 @@ export function BookDemoForm({ onStepChange }: BookDemoFormProps) {
 
   if (step === "review" && demodeskPayload) {
     const form = demodeskPayload.form
-    const fullName = [form?.customer_first_name, form?.customer_last_name]
-      .map((part) => part?.trim())
+    const fullName = [getDemodeskFirstName(form), getDemodeskLastName(form)]
       .filter(Boolean)
       .join(" ")
     const locationLabel =
@@ -278,9 +289,9 @@ export function BookDemoForm({ onStepChange }: BookDemoFormProps) {
         <dl className="rounded-md border border-border px-4">
           <ReviewRow label="Meeting" value={formatMeetingDate(demodeskPayload.meetingDate)} />
           <ReviewRow label="Name" value={displayValue(fullName)} />
-          <ReviewRow label="Email" value={displayValue(form?.customer_email)} />
-          <ReviewRow label="Phone" value={displayValue(form?.customer_phone)} />
-          <ReviewRow label="Company" value={displayValue(form?.customer_company_name)} />
+          <ReviewRow label="Email" value={displayValue(getDemodeskEmail(form))} />
+          <ReviewRow label="Phone" value={displayValue(getDemodeskPhone(form))} />
+          <ReviewRow label="Company" value={displayValue(getDemodeskCompany(form))} />
           <ReviewRow label="Location" value={displayValue(locationLabel)} />
           <ReviewRow label="Interest" value={displayValue(values.interests.join(", "))} />
           <ReviewRow label="Message" value={displayValue(values.message)} />
